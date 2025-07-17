@@ -15,6 +15,11 @@ class Command(BaseCommand):
         parser.add_argument("input", type=str)
 
     def get_picture_url_from_wiki_article(self, url: str):
+        """
+        Extract main picture from wiki articles like this:
+        'https://de.wikipedia.org/wiki/Alphubel'
+        Generous sleep to account for annyoing rate limit
+        """
         # Wikipedia API query string to get the main image on a page
         # (partial URL will be added to the end)
         query = "http://de.wikipedia.org/w/api.php?action=query&prop=pageimages&format=json&piprop=original&titles="
@@ -22,12 +27,7 @@ class Command(BaseCommand):
         time.sleep(10)
         try:
 
-            retries = Retry(total=5, backoff_factor=3, status_forcelist=[429])
-
-            s = requests.Session()
-            s.mount("https://", HTTPAdapter(max_retries=retries))
-            api_res = s.get(query + partial_url)
-            data = api_res.json()
+            data = self.get_data(query + partial_url)
             first_part = data["query"]["pages"]
             # this is a way around not knowing the article id number
             for key, value in first_part.items():
@@ -37,6 +37,25 @@ class Command(BaseCommand):
         except Exception as exc:
             print(f"Picture not found for: {partial_url}: {exc}")
             return None
+
+    def get_data(self, url: str) -> dict:
+        retries = Retry(total=5, backoff_factor=3, status_forcelist=[429])
+
+        s = requests.Session()
+        s.mount("https://", HTTPAdapter(max_retries=retries))
+        api_res = s.get(url)
+        data = api_res.json()
+        return data
+
+    def get_picture_url_from_wiki_link(self, url: str) -> str:
+        """
+        Extract picture url from a picture page like this:
+        https://de.wikipedia.org/wiki/Datei:Churfirsten_mit_Sommerschnee.JPG
+        """
+        image_filename = url.split(":")[-1]
+        api_url = f"https://api.wikimedia.org/core/v1/commons/file/File:{image_filename}"
+        data = self.get_data(api_url)
+        return data.get("original").get("url")
 
     def handle(self, *args, **options):
         # read xlsx
@@ -98,20 +117,22 @@ class Command(BaseCommand):
             except IntegrityError:
                 print(f"{peak_name} already exists, skipping")
                 peak = Peak.objects.get(name=peak_name)
-                if peak_picture:
-                    first_pic = Picture(url=peak_picture, peak=peak)
-                    try:
-                        first_pic.save()
-                        print(f"found first picture for {peak_name}: {peak_picture.split('/')[-1]}")
-                    except IntegrityError:
-                        print(f"Picture {first_pic.url} already exists, skipping")
+            if peak_picture:
+                if "wiki/Datei:" in peak_picture:
+                    peak_picture = self.get_picture_url_from_wiki_link(peak_picture)
+
+                first_pic = Picture(url=peak_picture, peak=peak)
+                try:
+                    first_pic.save()
+                    print(f"found first picture for {peak_name}: {peak_picture}")
+                except IntegrityError:
+                    print(f"Picture {first_pic.url} already exists, skipping")
 
             second_pic = self.get_picture_url_from_wiki_article(peak_url)
             if second_pic:
-                print(f"found second picture for {peak_name}: {second_pic.split('/')[-1]}")
+                print(f"found second picture for {peak_name}: {second_pic}")
                 second_picture = Picture(url=second_pic, peak=peak)
                 try:
                     second_picture.save()
                 except IntegrityError:
                     print(f"Picture {first_pic.url} already exists, skipping")
-
