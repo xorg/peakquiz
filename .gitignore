@@ -1,5 +1,7 @@
+# env files
 .env
-# Byte-compiled / optimized / DLL files
+
+# python specific files
 __pycache__/
 *.py[codz]
 *$py.class
@@ -16,3 +18,9 @@ share/python-wheels/
 .installed.cfg
 *.egg
 MANIFEST
+
+# db file
+peaks.sqlite
+
+# migrations for now, since they will change often
+peakquiz/migrations/*
