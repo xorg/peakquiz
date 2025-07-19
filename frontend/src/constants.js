@@ -2,6 +2,12 @@ export const jsQuizz = {
   questions: [
     {
       question:
+        "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3e/DammastockFromN.jpg/2560px-DammastockFromN.jpg",
+      type: "FIB",
+      correctAnswer: "Dammastock",
+    },
+    {
+      question:
         "https://upload.wikimedia.org/wikipedia/commons/9/91/Piz_Bernina_Aug_2008_close.jpg",
       choices: [
         "Piz Palü",

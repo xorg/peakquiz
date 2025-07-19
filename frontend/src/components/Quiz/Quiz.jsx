@@ -10,10 +10,11 @@ const Quiz = ({ questions }) => {
     const [result, setResult] = useState(resultInitialState);
     const [showResult, setShowResult] = useState(false);
     const [showAnswerTimer, setShowAnswerTimer] = useState(true);
+    const [inputAnswer, setInputAnswer] = useState('');
 
 
 
-    const { question, choices, correctAnswer } = questions[currentQuestion];
+    const { question, choices, correctAnswer, type } = questions[currentQuestion];
 
     const onAnswerClick = (answer, index) => {
         setAnswerIdx(index);
@@ -63,27 +64,33 @@ const Quiz = ({ questions }) => {
         onClickNext(false);
     }
 
-    return (
-        <div className="quiz-container">
-            {!showResult ? (
-                <>
-                    {showAnswerTimer && (
-                        <AnswerTimer duration={5} onTimeUp={handleTimeUp} />)}
-                    <span className="active-question-no">{currentQuestion + 1}</span>
-                    <span className="total-questions">/{questions.length}</span>
-                    <span className="peak-picture"><img src={question} alt="" width="100%" /></span>
-                    <ul>
-                        {
-                            choices.map((answer, index) => (
-                                <li
-                                    key={answer}
-                                    onClick={() => onAnswerClick(answer, index)}
-                                    className={answerIdx === index ? 'selected-answer' : null}>
-                                    {answer}
-                                </li>
-                            ))
-                        }
-                    </ul>
+    const handleInputChange = (event) => {
+        setInputAnswer(event.target.value);
+
+        if (event.target.value) {
+            setAnswer(true);
+        } else {
+            setAnswer(false);
+        }
+    }
+
+    const getAnswerUI = () => {
+        if (type === 'FIB') {
+            return <input value={inputAnswer} onChange={handleInputChange} />
+        }
+        return (
+        <ul>
+            {
+                choices.map((answer, index) => (
+                    <li
+                        key={answer}
+                        onClick={() => onAnswerClick(answer, index)}
+                        className={answerIdx === index ? 'selected-answer' : null}>
+                        {answer}
+                    </li>
+                ))
+            }
+        </ul>);
     }
 
     return (
@@ -95,9 +102,9 @@ const Quiz = ({ questions }) => {
                     <span className="active-question-no">{currentQuestion + 1}</span>
                     <span className="total-questions">/{questions.length}</span>
                     <span className="peak-picture"><img src={question} alt="" width="100%" /></span>
-
+                    {getAnswerUI(type)}
                     <div className="footer">
-                        <button onClick={() => onClickNext(answer)} disabled={answerIdx === null}>
+                        <button onClick={() => onClickNext(answer)} disabled={answerIdx === null && !inputAnswer}>
                             {currentQuestion == questions.length - 1 ? "Fertig" : "Weiter"}
                         </button>
                     </div>
