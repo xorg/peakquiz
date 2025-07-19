@@ -17,6 +17,7 @@ openpyxl = "^3.1.5"
 requests = "^2.32.4"
 django-stubs = "^5.2.1"
 django-ninja = "^1.4.3"
+django-cors-headers = "^4.7.0"
 
 
 [tool.poetry.group.dev.dependencies]
