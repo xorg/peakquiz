@@ -1,0 +1,15 @@
+@use "../../styles/vars.scss";
+
+.answer-timer-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+}
+
+.progress {
+    height: 5px;
+    transition-duration: 1s;
+    width: 100%;
+    transition-timing-function: linear;
+}
