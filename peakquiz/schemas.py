@@ -1,3 +1,4 @@
+from typing import Optional
 from ninja import Schema
 
 
@@ -11,6 +12,7 @@ class Question(Schema):
     question: str
     type: str
     correctAnswer: str
+    choices: Optional[list[str]]
 
 class QuestionList(Schema):
     questions: list[Question]
