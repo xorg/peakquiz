@@ -1,10 +1,11 @@
 @use '../../styles/vars.scss';
 
 .quiz-container {
-    width: 800px;
+    max-width: 800px;
+    width: 70%;
     background: vars.$bg-primary;
     border-radius: 4px;
-    margin-top: 100px;
+    margin-top: 50px;
     padding: 30px 60px;
     box-sizing: relative;
 

@@ -19,9 +19,9 @@ const Quiz = ({ questions }) => {
     const onAnswerClick = (answer, index) => {
         setAnswerIdx(index);
         if (answer == correctAnswer) {
-            setAnswer(true);
+            setAnswer({ correct: true, answerText: answer });
         } else {
-            setAnswer(false)
+            setAnswer({ correct: false, answerText: answer })
         }
     }
 
@@ -29,16 +29,22 @@ const Quiz = ({ questions }) => {
         setAnswerIdx(null);
         setShowAnswerTimer(false);
         setResult((prev) =>
-            answer
+            answer.correct
                 ? {
                     ...prev,
                     score: prev.score + 5,
-                    correctAnswers: prev.correctAnswers + 1
+                    correctAnswers: prev.correctAnswers + 1,
+                    answersList: [
+                        ...prev.answersList, answer
+                    ]
                 } : {
                     ...prev,
                     wrongAnswers: prev.wrongAnswers + 1,
-
+                    answersList: [
+                        ...prev.answersList, answer
+                    ]
                 });
+
 
         if (currentQuestion !== questions.length - 1) {
             setCurrentQuestion((prev) => prev + 1);
@@ -60,7 +66,7 @@ const Quiz = ({ questions }) => {
     }
 
     const handleTimeUp = () => {
-        setAnswer(false);
+        setAnswer({ correct: false, answerText: '' });
         onClickNext(false);
     }
 
@@ -68,9 +74,9 @@ const Quiz = ({ questions }) => {
         setInputAnswer(event.target.value);
 
         if (event.target.value) {
-            setAnswer(true);
+            setAnswer({ correct: true, answerText: event.target.value });
         } else {
-            setAnswer(false);
+            setAnswer({ correct: false, answerText: event.target.value });
         }
     }
 
@@ -79,18 +85,18 @@ const Quiz = ({ questions }) => {
             return <input value={inputAnswer} onChange={handleInputChange} />
         }
         return (
-        <ul>
-            {
-                choices.map((answer, index) => (
-                    <li
-                        key={answer}
-                        onClick={() => onAnswerClick(answer, index)}
-                        className={answerIdx === index ? 'selected-answer' : null}>
-                        {answer}
-                    </li>
-                ))
-            }
-        </ul>);
+            <ul>
+                {
+                    choices.map((answer, index) => (
+                        <li
+                            key={answer}
+                            onClick={() => onAnswerClick(answer, index)}
+                            className={answerIdx === index ? 'selected-answer' : null}>
+                            {answer}
+                        </li>
+                    ))
+                }
+            </ul>);
     }
 
     return (
@@ -98,7 +104,7 @@ const Quiz = ({ questions }) => {
             {!showResult ? (
                 <>
                     {showAnswerTimer && (
-                        <AnswerTimer duration={30} onTimeUp={handleTimeUp} />)}
+                        <AnswerTimer duration={300} onTimeUp={handleTimeUp} />)}
                     <span className="active-question-no">{currentQuestion + 1}</span>
                     <span className="total-questions">/{questions.length}</span>
                     <span className="peak-picture"><img src={question} alt="" width="100%" /></span>
@@ -119,6 +125,24 @@ const Quiz = ({ questions }) => {
                 <p>
                     Richtig: <span>{result.correctAnswers}</span>
                 </p>
+                Antworten:
+                <ul>
+                    {
+
+
+                        result.answersList.map((x, index) => (
+
+                            <li key={x.answerText} style={{
+                                backgroundColor: `${x.correct
+                                    ? 'lightblue'
+                                    : 'orange'
+                                    }`,
+                            }}>
+                                <a target="_blank" rel="noopener noreferrer" href={questions[index].question}>{x.answerText}</a>
+                            </li>
+                        ))
+                    }
+                </ul>
                 <p>
                     Falsch: <span>{result.wrongAnswers}</span>
                 </p>

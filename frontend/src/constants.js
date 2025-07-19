@@ -59,5 +59,6 @@ export const jsQuizz = {
 export const resultInitialState = {
   score: 0,
   correctAnswers: 0,
+  answersList: [],
   wrongAnswers: 0
 }

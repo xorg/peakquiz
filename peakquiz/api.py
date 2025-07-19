@@ -2,7 +2,7 @@ from ninja import NinjaAPI
 
 import random
 
-from peakquiz.models import Picture
+from peakquiz.models import Peak, Picture
 from peakquiz.schemas import Question, QuestionList
 
 
