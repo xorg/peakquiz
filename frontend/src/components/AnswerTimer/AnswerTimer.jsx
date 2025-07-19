@@ -2,7 +2,7 @@ import "./AnswerTimer.scss"
 import { useEffect, useState, useRef } from "react";
 
 
-function AnswerTimer({ duration }) {
+function AnswerTimer({ duration, onTimeUp }) {
     const [counter, setCounter] = useState(0);
     const [progressLoaded, setProgressLoaded] = useState(0);
     const intervalRef = useRef();
@@ -22,7 +22,7 @@ function AnswerTimer({ duration }) {
               clearInterval(intervalRef.current);
 
               setTimeout(() => {
-                handleTimeUp();
+                onTimeUp();
               }, 1000);
         }
     }, [counter]);
@@ -32,8 +32,12 @@ function AnswerTimer({ duration }) {
          style={{
             width: `${progressLoaded}%`,
             backgroundColor: `${
-                progressLoaded < 50 ? `lightgreen` : progressLoaded < 70
-            }`
+                progressLoaded < 40
+                ? 'lightgreen'
+                : progressLoaded < 70 
+                ? 'orange'
+                : 'red'
+            }`,
          }}
          className="progress">
 

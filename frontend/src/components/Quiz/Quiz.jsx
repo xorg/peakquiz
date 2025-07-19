@@ -49,7 +49,7 @@ const Quiz = ({ questions }) => {
 
         setTimeout(() => {
             setShowAnswerTimer(true);
-        });
+        }, 100);
     }
 
     const onTryAgain = () => {
@@ -84,6 +84,18 @@ const Quiz = ({ questions }) => {
                             ))
                         }
                     </ul>
+    }
+
+    return (
+        <div className="quiz-container">
+            {!showResult ? (
+                <>
+                    {showAnswerTimer && (
+                        <AnswerTimer duration={30} onTimeUp={handleTimeUp} />)}
+                    <span className="active-question-no">{currentQuestion + 1}</span>
+                    <span className="total-questions">/{questions.length}</span>
+                    <span className="peak-picture"><img src={question} alt="" width="100%" /></span>
+
                     <div className="footer">
                         <button onClick={() => onClickNext(answer)} disabled={answerIdx === null}>
                             {currentQuestion == questions.length - 1 ? "Fertig" : "Weiter"}
