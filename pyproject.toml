@@ -16,6 +16,7 @@ requests = "^2.32.4"
 django-stubs = "^5.2.1"
 django-ninja = "^1.4.3"
 django-cors-headers = "^4.7.0"
+python-dotenv = "^1.1.1"
 
 
 [tool.poetry.group.dev.dependencies]
