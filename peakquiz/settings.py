@@ -24,7 +24,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS: list[str] = ["192.168.0.149"]
+ALLOWED_HOSTS: list[str] = ["192.168.0.149", "127.0.0.1", "localhost", "192.168.1.139"]
 
 SECRET_KEY: str | None = os.environ.get("SECRET_KEY")
 
