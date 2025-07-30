@@ -10,7 +10,7 @@ function App() {
 
   const getQuestions = async () => {
     try {
-      const response = await fetch("http://" + import.meta.env.VITE_BACKEND_HOST + "/api/peaks")
+      const response = await fetch("https://" + import.meta.env.VITE_BACKEND_HOST + "/api/peaks")
       const questionsResponse = await response.json();
       setQuestions(questionsResponse);
     } catch (error) {
