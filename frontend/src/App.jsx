@@ -7,10 +7,10 @@ function App() {
   useEffect(() => {
     getQuestions();
   }, []);
-
   const getQuestions = async () => {
     try {
-      const response = await fetch("https://" + import.meta.env.VITE_BACKEND_HOST + "/api/peaks")
+      const protocol = import.meta.env.MODE == "development" ? "http://" : "https://";
+      const response = await fetch(protocol + import.meta.env.VITE_BACKEND_HOST + "/api/peaks")
       const questionsResponse = await response.json();
       setQuestions(questionsResponse);
     } catch (error) {

@@ -47,6 +47,19 @@
             background: vars.$primary;
             border: 1px solid vars.$accent;
             color: vars.$bg-primary;
+            -webkit-transition-duration: 0.5s;
+            /* Safari */
+            transition-duration: 0.5s;
+            text-decoration: none;
+            overflow: hidden;
+        }
+
+
+        .selected-answer:active:after {
+            padding: 0;
+            margin: 0;
+            opacity: 1;
+            transition: 0s
         }
     }
 
