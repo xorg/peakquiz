@@ -62,6 +62,7 @@ const Quiz = ({ questions }) => {
     const onTryAgain = () => {
         setResult(resultInitialState);
         setShowResult(false);
+        window.location.reload();
 
     }
 
