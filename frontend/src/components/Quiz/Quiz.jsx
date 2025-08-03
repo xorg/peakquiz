@@ -2,6 +2,7 @@ import { useState } from "react";
 import { resultInitialState } from "../../constants";
 import AnswerTimer from "../AnswerTimer/AnswerTimer";
 import "./Quiz.scss";
+import Result from "../Result/Result";
 
 const Quiz = ({ questions }) => {
     const [currentQuestion, setCurrentQuestion] = useState(0);
@@ -115,40 +116,7 @@ const Quiz = ({ questions }) => {
                             {currentQuestion == questions.length - 1 ? "Fertig" : "Weiter"}
                         </button>
                     </div>
-                </>) : <div className="result">
-                <h3>Resultat</h3>
-                <p>
-                    Anzahl Gipfel: <span>{questions.length}</span>
-                </p>
-                <p>
-                    Punkte: <span>{result.score}</span>
-                </p>
-                <p>
-                    Richtig: <span>{result.correctAnswers}</span>
-                </p>
-                Antworten:
-                <ul>
-                    {
-
-
-                        result.answersList.map((x, index) => (
-
-                            <li key={x.answerText} style={{
-                                backgroundColor: `${x.correct
-                                    ? 'lightblue'
-                                    : 'orange'
-                                    }`,
-                            }}>
-                                <a target="_blank" rel="noopener noreferrer" href={questions[index].question}>{x.answerText}</a>
-                            </li>
-                        ))
-                    }
-                </ul>
-                <p>
-                    Falsch: <span>{result.wrongAnswers}</span>
-                </p>
-                <button onClick={onTryAgain}>Neuer Versuch</button>
-            </div>}
+                </>) : (<Result result={result} onTryAgain={onTryAgain} questions={questions} />)}
 
         </div>
     )
