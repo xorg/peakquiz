@@ -25,6 +25,6 @@ def get_random_peak(request, number: int = 5) -> list[Question]:
             if not peak_choice == pic.peak.name:
                 choices.append(peak_choice)
         random.shuffle(choices)
-        questions.append(Question(question=pic.url, type="MCQ", choices=choices, correctAnswer=pic.peak.name))
+        questions.append(Question(question=pic.cdn_url if pic.cdn_url else pic.original_url, type="MCQ", choices=choices, correctAnswer=pic.peak.name))
 
     return questions
