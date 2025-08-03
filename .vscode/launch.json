@@ -11,7 +11,9 @@
             "program": "${workspaceFolder}/manage.py",
             "args": [
                 "importpeaks",
-                "~/Downloads/berge_final.xlsx"
+                "~/Downloads/berge_final.xlsx",
+                "--offset",
+                "132"
             ],
             "django": true
         }

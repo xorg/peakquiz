@@ -23,6 +23,12 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser):
         parser.add_argument("input", type=str)
+        parser.add_argument(
+            "--offset",
+            action="store",
+            type=int,
+            help="Start at a given row in the input file",
+        )
 
     def get_picture_url_from_wiki_article(self, url: str):
         """
@@ -35,7 +41,6 @@ class Command(BaseCommand):
         query = "http://de.wikipedia.org/w/api.php?action=query&prop=pageimages&format=json&piprop=original&titles="
         partial_url = url.split("/")[-1]
         try:
-
             data = self.get_data(query + partial_url)
             first_part = data["query"]["pages"]
             # this is a way around not knowing the article id number
@@ -101,7 +106,7 @@ class Command(BaseCommand):
         # 6 - Gebirge
         # 7 - Dominanz
         # 8 - Schartenhöhe
-        for row_num in range(2, len(list(ws.rows))):
+        for row_num in range(2 + options["offset"], len(list(ws.rows))):
             try:
                 peak_picture = ws.cell(row=row_num, column=1).hyperlink.target
             except AttributeError:
