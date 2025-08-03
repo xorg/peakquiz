@@ -11,7 +11,7 @@
             "program": "${workspaceFolder}/manage.py",
             "args": [
                 "importpeaks",
-                "~/Downloads/berge.xlsx"
+                "~/Downloads/berge_final.xlsx"
             ],
             "django": true
         }
