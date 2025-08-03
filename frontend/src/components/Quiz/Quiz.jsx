@@ -109,7 +109,7 @@ const Quiz = ({ questions }) => {
                         <AnswerTimer duration={300} onTimeUp={handleTimeUp} />)}
                     <span className="active-question-no">{currentQuestion + 1}</span>
                     <span className="total-questions">/{questions.length}</span>
-                    <span className="peak-picture"><img src={question} alt="" width="100%" /></span>
+                    <span className="peak-picture"><img src={question.replace("q_auto", "q_auto,w_800")} alt="" width="100%" /></span>
                     {getAnswerUI(type)}
                     <div className="footer">
                         <button onClick={() => onClickNext(answer)} disabled={answerIdx === null && !inputAnswer}>
