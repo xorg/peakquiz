@@ -1,13 +1,15 @@
 @use '../../styles/vars.scss';
 
 .quiz-container {
-    max-width: 800px;
-    width: 70%;
+    max-width: 700px;
+    width: 95%;
     background: vars.$bg-primary;
     border-radius: 16px;
     margin-top: 50px;
-    padding: 30px 60px;
+    padding: 5% 3%;
     box-sizing: relative;
+    opacity: 90%;
+
 
     .active-question-no {
         font-size: 32px;

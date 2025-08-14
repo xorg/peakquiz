@@ -8,26 +8,9 @@ const Result = ({ questions, result, onTryAgain }) => {
     const [showScores, setShowScores] = useState(false);
 
     useEffect(() => {
-        setHighScores(JSON.parse(localStorage.getItem("highScores")) || []);
+        setHighScores(JSON.parse(localStorage.getItem("highScores")) || {});
     }, []);
-    /*
-    setResult((prev) =>
-                answer.correct
-                    ? {
-                        ...prev,
-                        score: prev.score + 5,
-                        correctAnswers: prev.correctAnswers + 1,
-                        answersList: [
-                            ...prev.answersList, answer
-                        ]
-                    } : {
-                        ...prev,
-                        wrongAnswers: prev.wrongAnswers + 1,
-                        answersList: [
-                            ...prev.answersList, answer
-                        ]
-                    });
-    */
+
     const handleSave = () => {
         const score = {
             totalGuesses: questions.length,
