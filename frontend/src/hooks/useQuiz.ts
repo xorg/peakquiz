@@ -115,6 +115,14 @@ export function useQuiz() {
     }
   }
 
+  useEffect(() => {
+    questions.forEach(q => {
+      if (q.peak.imageUrl) {
+        new Image().src = q.peak.imageUrl
+      }
+    })
+  }, [questions])
+
   useEffect(() => () => stopTimer(), [stopTimer])
 
   return {
