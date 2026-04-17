@@ -6,9 +6,10 @@ interface Props {
   user: User | null
   onLoginClick: () => void
   onLogoutClick: () => void
+  onProfileClick: () => void
 }
 
-export function Navigation({ user, onLoginClick, onLogoutClick }: Props) {
+export function Navigation({ user, onLoginClick, onLogoutClick, onProfileClick }: Props) {
   const { t } = useTranslation()
 
   return (
@@ -17,7 +18,9 @@ export function Navigation({ user, onLoginClick, onLogoutClick }: Props) {
       <div className={styles.actions}>
         {user ? (
           <>
-            <span className={styles.username}>{user.username}</span>
+            <button className={styles.usernameBtn} onClick={onProfileClick}>
+              {user.username}
+            </button>
             <button className={styles.btnSecondary} onClick={onLogoutClick}>
               {t('signOut')}
             </button>

@@ -1,4 +1,4 @@
-import type { QuizSession, QuizQuestion, AnswerResult, RankingEntry, User } from '../types'
+import type { QuizSession, QuizQuestion, AnswerResult, RankingEntry, User, ProfileStats } from '../types'
 
 const BASE_URL = '/api'
 
@@ -40,5 +40,9 @@ export const api = {
 
   rankings: {
     global: (limit = 50) => request<RankingEntry[]>(`/rankings?limit=${limit}`),
+  },
+
+  profile: {
+    stats: () => request<ProfileStats>('/profile/stats'),
   },
 }

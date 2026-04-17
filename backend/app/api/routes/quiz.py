@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session, joinedload
 
 from ...db.database import get_db
-from ...db.models import Peak, Picture, User
+from ...db.models import Guess, Peak, Picture, User
 from ...schemas.quiz import AnswerRequest, AnswerResult, FinishRequest, QuizSession, QuizQuestion, PeakOut
 from ...api.routes.auth import get_optional_user
 
@@ -94,7 +94,11 @@ def next_question(session_id: str, db: Session = Depends(get_db)):
 
 
 @router.post("/answer", response_model=AnswerResult)
-def answer(body: AnswerRequest):
+def answer(
+    body: AnswerRequest,
+    db: Session = Depends(get_db),
+    current_user: User | None = Depends(get_optional_user),
+):
     session = _sessions.get(body.sessionId)
     if not session:
         raise HTTPException(status_code=404, detail="Session not found")
@@ -106,6 +110,10 @@ def answer(body: AnswerRequest):
     is_correct = body.answer.strip().lower() == correct_name.strip().lower()
     if is_correct:
         session["score"] += POINTS_PER_CORRECT
+
+    if current_user:
+        db.add(Guess(user_id=current_user.id, peak_id=body.questionId, is_correct=is_correct))
+        db.commit()
 
     return AnswerResult(
         correct=is_correct,

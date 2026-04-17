@@ -38,6 +38,21 @@ export interface User {
   avatarUrl?: string
 }
 
+export interface TroublePeak {
+  peakId: number
+  peakName: string
+  imageUrl: string
+  wrongCount: number
+  totalAttempts: number
+}
+
+export interface ProfileStats {
+  totalGuesses: number
+  correctGuesses: number
+  accuracyPercent: number
+  troublePeaks: TroublePeak[]
+}
+
 export type QuizState = 'idle' | 'active' | 'nickname' | 'finished'
 
 export type AnswerState = 'unanswered' | 'correct' | 'wrong'

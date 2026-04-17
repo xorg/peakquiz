@@ -4,7 +4,7 @@ from starlette.middleware.sessions import SessionMiddleware
 
 from .core.config import settings
 from .db.database import Base, engine
-from .api.routes import auth, quiz, rankings
+from .api.routes import auth, profile, quiz, rankings
 
 Base.metadata.create_all(bind=engine)
 
@@ -22,6 +22,7 @@ app.add_middleware(SessionMiddleware, secret_key=settings.secret_key)
 app.include_router(auth.router, prefix="/api")
 app.include_router(quiz.router, prefix="/api")
 app.include_router(rankings.router, prefix="/api")
+app.include_router(profile.router, prefix="/api")
 
 
 @app.get("/api/health")
