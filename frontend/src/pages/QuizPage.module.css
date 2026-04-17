@@ -26,11 +26,12 @@
   font-family: var(--font-label);
   font-weight: 700;
   font-size: var(--text-title-md);
-  letter-spacing: 0.04em;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
   padding: var(--space-4) var(--space-10);
-  background: linear-gradient(160deg, var(--color-primary) 0%, var(--color-primary-container) 100%);
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-container) 100%);
   color: var(--color-on-primary);
-  border-radius: var(--radius-lg);
+  border-radius: 0;
   box-shadow: var(--shadow-elevated);
   transition: transform var(--transition-fast), box-shadow var(--transition-fast);
 }
@@ -118,7 +119,7 @@
   left: 0;
   right: 0;
   padding: var(--space-4) var(--space-5);
-  background: linear-gradient(to top, rgba(24, 48, 29, 0.75) 0%, transparent 100%);
+  background: linear-gradient(to top, rgba(7, 30, 39, 0.82) 0%, transparent 100%);
 }
 
 .question {
