@@ -1,3 +1,4 @@
+import { useTranslation } from '../hooks/useTranslation'
 import styles from './Navigation.module.css'
 import type { User } from '../types'
 
@@ -8,6 +9,8 @@ interface Props {
 }
 
 export function Navigation({ user, onLoginClick, onLogoutClick }: Props) {
+  const { t } = useTranslation()
+
   return (
     <nav className={styles.nav}>
       <span className={styles.brand}>PEAKQUIZ</span>
@@ -16,12 +19,12 @@ export function Navigation({ user, onLoginClick, onLogoutClick }: Props) {
           <>
             <span className={styles.username}>{user.username}</span>
             <button className={styles.btnSecondary} onClick={onLogoutClick}>
-              Sign out
+              {t('signOut')}
             </button>
           </>
         ) : (
           <button className={styles.btnPrimary} onClick={onLoginClick}>
-            Sign in with Google
+            {t('signIn')}
           </button>
         )}
       </div>

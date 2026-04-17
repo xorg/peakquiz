@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useQuiz } from '../hooks/useQuiz'
 import { useAuth } from '../hooks/useAuth'
+import { useTranslation } from '../hooks/useTranslation'
 import { Timer } from '../components/Timer'
 import { AnswerOption } from '../components/AnswerOption'
 import { LeaderboardPage } from './LeaderboardPage'
@@ -26,6 +27,7 @@ export function QuizPage() {
   } = useQuiz()
 
   const { user } = useAuth()
+  const { t } = useTranslation()
   const [nickname, setNickname] = useState(() => localStorage.getItem('pq_nickname') ?? '')
 
   useEffect(() => {
@@ -50,22 +52,22 @@ export function QuizPage() {
       <main className={styles.nickname}>
         <div className={styles.nicknameResult}>
           <span className={styles.nicknameScore}>{score.toLocaleString()}</span>
-          <span className={styles.nicknameScoreLabel}>pts</span>
+          <span className={styles.nicknameScoreLabel}>{t('pts')}</span>
         </div>
         <form className={styles.nicknameForm} onSubmit={handleSubmit}>
-          <h2 className={styles.nicknameTitle}>Enter your name for the rankings</h2>
+          <h2 className={styles.nicknameTitle}>{t('nicknameTitle')}</h2>
           <input
             className={styles.nicknameInput}
             value={nickname}
             onChange={e => setNickname(e.target.value)}
-            placeholder="Your name"
+            placeholder={t('nicknamePlaceholder')}
             maxLength={30}
             autoFocus
           />
           <div className={styles.nicknameActions}>
-            <button type="submit" className={styles.nicknameSave}>Save Score</button>
+            <button type="submit" className={styles.nicknameSave}>{t('nicknameSave')}</button>
             <button type="button" className={styles.nicknameSkip} onClick={() => submitNickname('')}>
-              Skip
+              {t('nicknameSkip')}
             </button>
           </div>
         </form>
@@ -76,10 +78,10 @@ export function QuizPage() {
   if (quizState === 'idle') {
     return (
       <main className={styles.idle}>
-        <h2 className={styles.idleTitle}>Ready to climb?</h2>
-        <p className={styles.idleDesc}>You'll have 60 seconds to identify as many mountain peaks as possible.</p>
+        <h2 className={styles.idleTitle}>{t('quizIdleTitle')}</h2>
+        <p className={styles.idleDesc}>{t('quizIdleDesc')}</p>
         <button className={styles.startBtn} onClick={startQuiz}>
-          Begin Ascent
+          {t('quizStart')}
         </button>
       </main>
     )
@@ -98,7 +100,7 @@ export function QuizPage() {
             <span key={answeredCount} className={styles.scoreDelta}>+{lastPoints}</span>
           )}
           <span className={styles.scoreValue}>{score.toLocaleString()}</span>
-          <span className={styles.scoreLabel}>pts</span>
+          <span className={styles.scoreLabel}>{t('pts')}</span>
         </div>
         <span className={styles.progress}>{answeredCount + 1}</span>
       </div>
@@ -112,7 +114,7 @@ export function QuizPage() {
             alt="Mountain peak — can you name it?"
           />
           <div className={styles.imageOverlay}>
-            <p className={styles.question}>WHICH PEAK IS THIS?</p>
+            <p className={styles.question}>{t('quizQuestion')}</p>
           </div>
         </div>
 
