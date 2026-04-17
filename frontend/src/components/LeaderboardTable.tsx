@@ -1,3 +1,4 @@
+import { Trophy, Award } from 'lucide-react'
 import styles from './LeaderboardTable.module.css'
 import type { RankingEntry } from '../types'
 
@@ -5,7 +6,12 @@ interface Props {
   entries: RankingEntry[]
 }
 
-const MEDALS = ['🥇', '🥈', '🥉']
+function RankIcon({ rank }: { rank: number }) {
+  if (rank === 1) return <Trophy size={18} strokeWidth={1.5} className={styles.rankFirst} />
+  if (rank === 2) return <Award size={18} strokeWidth={1.5} className={styles.rankSecond} />
+  if (rank === 3) return <Award size={18} strokeWidth={1.5} className={styles.rankThird} />
+  return <span>{`#${rank}`}</span>
+}
 
 export function LeaderboardTable({ entries }: Props) {
   return (
@@ -16,7 +22,7 @@ export function LeaderboardTable({ entries }: Props) {
           className={`${styles.row} ${entry.isCurrentUser ? styles.highlighted : ''}`}
         >
           <span className={styles.rank}>
-            {entry.rank <= 3 ? MEDALS[entry.rank - 1] : `#${entry.rank}`}
+            <RankIcon rank={entry.rank} />
           </span>
           <span className={styles.username}>{entry.username}</span>
           <span className={styles.score}>{entry.score.toLocaleString()}</span>

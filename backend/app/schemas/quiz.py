@@ -36,6 +36,8 @@ class AnswerResult(BaseModel):
 class FinishRequest(BaseModel):
     sessionId: str
     score: int
+    nickname: str | None = None
+    guestId: str | None = None
 
 
 class RankingEntry(BaseModel):

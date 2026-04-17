@@ -3,6 +3,16 @@ import { api } from '../services/api'
 import type { QuizQuestion, AnswerState, QuizState } from '../types'
 
 const QUIZ_DURATION_SECONDS = 60
+
+function getOrCreateGuestId(): string {
+  const key = 'pq_guest_id'
+  let id = localStorage.getItem(key)
+  if (!id) {
+    id = crypto.randomUUID()
+    localStorage.setItem(key, id)
+  }
+  return id
+}
 const BONUS_THRESHOLD_SECONDS = 10
 const BONUS_SECONDS = 5
 
@@ -14,6 +24,8 @@ export function useQuiz() {
   const [timeLeft, setTimeLeft] = useState(QUIZ_DURATION_SECONDS)
   const [answerState, setAnswerState] = useState<AnswerState>('unanswered')
   const [wrongOption, setWrongOption] = useState<string | null>(null)
+  const [correctOption, setCorrectOption] = useState<string | null>(null)
+  const [lastPoints, setLastPoints] = useState(0)
 
   // Refs so timer and async callbacks always see current values
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
@@ -35,19 +47,28 @@ export function useQuiz() {
     }
   }, [])
 
-  const finishQuiz = useCallback(async (finalScore: number) => {
+  const finishQuiz = useCallback(() => {
     stopTimer()
-    setQuizState('finished')
+    setQuizState('nickname')
+  }, [stopTimer])
+
+  const submitNickname = useCallback(async (nickname: string) => {
     const sid = sessionIdRef.current
     if (sid) {
-      try { await api.quiz.finish(sid, finalScore) } catch { /* show local score regardless */ }
+      const guestId = getOrCreateGuestId()
+      try {
+        await api.quiz.finish(sid, scoreRef.current, nickname || undefined, nickname ? guestId : undefined)
+      } catch { /* show local score regardless */ }
     }
-  }, [stopTimer])
+    setQuizState('finished')
+  }, [])
 
   const advance = useCallback(async () => {
     const nextIndex = currentIndexRef.current + 1
     setAnswerState('unanswered')
     setWrongOption(null)
+    setCorrectOption(null)
+    setLastPoints(0)
 
     if (nextIndex < questionsRef.current.length) {
       setCurrentIndex(nextIndex)
@@ -61,7 +82,7 @@ export function useQuiz() {
       setCurrentIndex(nextIndex)
     } catch {
       // All peaks exhausted or session gone — end the quiz
-      finishQuiz(scoreRef.current)
+      finishQuiz()
     }
   }, [finishQuiz])
 
@@ -86,7 +107,7 @@ export function useQuiz() {
     timerRef.current = setInterval(() => {
       setTimeLeft(prev => {
         if (prev <= 1) {
-          finishQuiz(scoreRef.current)
+          finishQuiz()
           return 0
         }
         return prev - 1
@@ -103,15 +124,17 @@ export function useQuiz() {
       const newScore = result.totalPoints
       setScore(newScore)
       scoreRef.current = newScore
+      setCorrectOption(answer)
+      setLastPoints(result.pointsEarned)
       setAnswerState('correct')
       if (timeLeft <= BONUS_THRESHOLD_SECONDS) {
         setTimeLeft(prev => prev + BONUS_SECONDS)
       }
-      setTimeout(() => advance(), 400)
+      setTimeout(() => advance(), 600)
     } else {
       setWrongOption(answer)
       setAnswerState('wrong')
-      setTimeout(() => advance(), 600)
+      setTimeout(() => advance(), 900)
     }
   }
 
@@ -134,6 +157,9 @@ export function useQuiz() {
     wrongOption,
     startQuiz,
     submitAnswer,
+    submitNickname,
     answeredCount: currentIndex,
+    correctOption,
+    lastPoints,
   }
 }

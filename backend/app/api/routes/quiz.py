@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session, joinedload
 from ...db.database import get_db
 from ...db.models import Peak, Picture, User
 from ...schemas.quiz import AnswerRequest, AnswerResult, FinishRequest, QuizSession, QuizQuestion, PeakOut
-from ...api.routes.auth import get_current_user
+from ...api.routes.auth import get_optional_user
 
 router = APIRouter(prefix="/quiz", tags=["quiz"])
 
@@ -20,7 +20,8 @@ _sessions: dict[str, dict] = {}
 def _best_image(peak: Peak) -> str | None:
     for pic in peak.pictures:
         if pic.cdn_url:
-            return pic.cdn_url
+            # Inject resize transform before the public ID; w_800,c_limit caps delivery width without upscaling
+            return pic.cdn_url.replace("/upload/", "/upload/w_800,c_limit/", 1)
     for pic in peak.pictures:
         if pic.original_url:
             return pic.original_url
@@ -117,12 +118,23 @@ def answer(body: AnswerRequest):
 def finish_quiz(
     body: FinishRequest,
     db: Session = Depends(get_db),
-    current_user: User | None = Depends(lambda r=None: None),
+    current_user: User | None = Depends(get_optional_user),
 ):
     _sessions.pop(body.sessionId, None)
 
-    if current_user and body.score > current_user.best_score:
-        current_user.best_score = body.score
+    if current_user:
+        if body.score > current_user.best_score:
+            current_user.best_score = body.score
+            db.commit()
+    elif body.nickname and body.guestId:
+        guest = db.get(User, body.guestId)
+        if not guest:
+            guest = User(id=body.guest_id, username=body.nickname, best_score=body.score)
+            db.add(guest)
+        else:
+            guest.username = body.nickname
+            if body.score > guest.best_score:
+                guest.best_score = body.score
         db.commit()
 
     rank = db.query(User).filter(User.best_score > body.score).count() + 1

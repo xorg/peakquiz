@@ -31,10 +31,10 @@ export const api = {
       }),
     next: (sessionId: string) =>
       request<QuizQuestion>(`/quiz/next/${sessionId}`),
-    finish: (sessionId: string, score: number) =>
+    finish: (sessionId: string, score: number, nickname?: string, guestId?: string) =>
       request<{ rank: number }>('/quiz/finish', {
         method: 'POST',
-        body: JSON.stringify({ sessionId, score }),
+        body: JSON.stringify({ sessionId, score, nickname, guestId }),
       }),
   },
 

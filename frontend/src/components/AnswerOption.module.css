@@ -28,6 +28,16 @@
   cursor: not-allowed;
 }
 
+.option.correct {
+  background: #e4f5ec;
+  opacity: 1;
+}
+
+.option.correct .label {
+  background: #2d6a4f;
+  color: #fff;
+}
+
 .option.wrong {
   background: var(--color-error-container);
   animation: shake 0.3s ease;

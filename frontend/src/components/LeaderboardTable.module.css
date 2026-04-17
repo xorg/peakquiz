@@ -21,11 +21,26 @@
 
 .rank {
   min-width: 2.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   font-family: var(--font-label);
   font-weight: 700;
   font-size: var(--text-label-lg);
   color: var(--color-on-surface-variant);
   text-align: center;
+}
+
+.rankFirst {
+  color: var(--color-primary);
+}
+
+.rankSecond {
+  color: var(--color-on-surface);
+}
+
+.rankThird {
+  color: var(--color-on-surface-variant);
 }
 
 .username {

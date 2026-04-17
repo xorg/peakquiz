@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request, Response
 from fastapi.responses import RedirectResponse
 from sqlalchemy.orm import Session
 from authlib.integrations.starlette_client import OAuth
-from starlette.config import Config
+
 
 from ...core.config import settings
 from ...core.security import create_access_token, decode_access_token
@@ -12,18 +12,26 @@ from ...schemas.user import UserOut
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
-_config = Config(environ={
-    "GOOGLE_CLIENT_ID": settings.google_client_id,
-    "GOOGLE_CLIENT_SECRET": settings.google_client_secret,
-})
-oauth = OAuth(_config)
+oauth = OAuth()
 oauth.register(
     name="google",
+    client_id=settings.google_client_id,
+    client_secret=settings.google_client_secret,
     server_metadata_url="https://accounts.google.com/.well-known/openid-configuration",
     client_kwargs={"scope": "openid email profile"},
 )
 
 COOKIE_NAME = "pq_token"
+
+
+def get_optional_user(request: Request, db: Session = Depends(get_db)) -> User | None:
+    token = request.cookies.get(COOKIE_NAME)
+    if not token:
+        return None
+    user_id = decode_access_token(token)
+    if not user_id:
+        return None
+    return db.get(User, user_id)
 
 
 def get_current_user(request: Request, db: Session = Depends(get_db)) -> User:
