@@ -1,0 +1,78 @@
+.page {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  max-width: 560px;
+  margin: 0 auto;
+  width: 100%;
+  padding: var(--space-8) var(--space-4);
+  gap: var(--space-10);
+}
+
+.result {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-4);
+  padding: var(--space-10) var(--space-6);
+  background: var(--color-surface-container-lowest);
+  border-radius: var(--radius-2xl);
+  box-shadow: var(--shadow-ambient);
+  text-align: center;
+}
+
+.resultLabel {
+  font-family: var(--font-label);
+  font-weight: 700;
+  font-size: var(--text-label-md);
+  letter-spacing: 0.15em;
+  color: var(--color-on-surface-variant);
+}
+
+.resultScore {
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-size: var(--text-display-lg);
+  letter-spacing: -0.02em;
+  color: var(--color-primary);
+}
+
+.playAgain {
+  margin-top: var(--space-2);
+  font-family: var(--font-label);
+  font-weight: 700;
+  font-size: var(--text-title-md);
+  letter-spacing: 0.04em;
+  padding: var(--space-3) var(--space-8);
+  background: linear-gradient(160deg, var(--color-primary) 0%, var(--color-primary-container) 100%);
+  color: var(--color-on-primary);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-elevated);
+  transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.playAgain:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-ambient);
+}
+
+.leaderboard {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+.sectionTitle {
+  font-family: var(--font-headline);
+  font-size: var(--text-headline-sm);
+  font-weight: 700;
+  color: var(--color-on-surface);
+}
+
+.loading {
+  font-family: var(--font-body);
+  font-size: var(--text-body-md);
+  color: var(--color-on-surface-variant);
+  padding: var(--space-8) 0;
+  text-align: center;
+}

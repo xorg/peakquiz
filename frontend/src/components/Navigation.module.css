@@ -1,0 +1,60 @@
+.nav {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-4) var(--space-6);
+  background: rgba(248, 249, 249, 0.85);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+
+.brand {
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-size: var(--text-title-lg);
+  letter-spacing: 0.08em;
+  color: var(--color-primary);
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+}
+
+.username {
+  font-family: var(--font-label);
+  font-size: var(--text-label-lg);
+  color: var(--color-on-surface-variant);
+}
+
+.btnPrimary {
+  font-family: var(--font-label);
+  font-weight: 600;
+  font-size: var(--text-label-lg);
+  padding: var(--space-2) var(--space-5);
+  background: linear-gradient(160deg, var(--color-primary) 0%, var(--color-primary-container) 100%);
+  color: var(--color-on-primary);
+  border-radius: var(--radius-lg);
+  transition: opacity var(--transition-fast);
+}
+
+.btnPrimary:hover {
+  opacity: 0.9;
+}
+
+.btnSecondary {
+  font-family: var(--font-label);
+  font-weight: 500;
+  font-size: var(--text-label-lg);
+  padding: var(--space-2) var(--space-4);
+  color: var(--color-on-surface-variant);
+  transition: color var(--transition-fast);
+}
+
+.btnSecondary:hover {
+  color: var(--color-on-surface);
+}

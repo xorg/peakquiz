@@ -1,0 +1,119 @@
+/* Alpine Monolith Design System — Color Tokens */
+:root {
+  /* Primary — deep forest green */
+  --color-primary: #18301d;
+  --color-primary-container: #2e4632;
+  --color-on-primary: #ffffff;
+  --color-on-primary-container: #98b39a;
+  --color-primary-fixed: #cdeace;
+  --color-primary-fixed-dim: #b2ceb3;
+  --color-on-primary-fixed: #08200f;
+  --color-on-primary-fixed-variant: #344c38;
+
+  /* Secondary — slate blue */
+  --color-secondary: #4e616a;
+  --color-secondary-container: #cee3ee;
+  --color-on-secondary: #ffffff;
+  --color-on-secondary-container: #52656f;
+  --color-secondary-fixed: #d1e6f0;
+  --color-secondary-fixed-dim: #b5cad4;
+  --color-on-secondary-fixed: #0a1e26;
+  --color-on-secondary-fixed-variant: #374952;
+
+  /* Tertiary — warm amber */
+  --color-tertiary: #362808;
+  --color-tertiary-container: #4e3e1c;
+  --color-on-tertiary: #ffffff;
+  --color-on-tertiary-container: #c0a97f;
+  --color-tertiary-fixed: #f9dfb1;
+  --color-tertiary-fixed-dim: #dcc497;
+  --color-on-tertiary-fixed: #261a00;
+
+  /* Surface hierarchy */
+  --color-surface: #f8f9f9;
+  --color-surface-dim: #d9dada;
+  --color-surface-bright: #f8f9f9;
+  --color-surface-container-lowest: #ffffff;
+  --color-surface-container-low: #f3f4f4;
+  --color-surface-container: #edeeee;
+  --color-surface-container-high: #e7e8e8;
+  --color-surface-container-highest: #e1e3e3;
+  --color-surface-variant: #e1e3e3;
+  --color-surface-tint: #4b644e;
+
+  /* On-surface */
+  --color-on-surface: #191c1c;
+  --color-on-surface-variant: #434842;
+  --color-inverse-surface: #2e3131;
+  --color-inverse-on-surface: #f0f1f1;
+  --color-inverse-primary: #b2ceb3;
+
+  /* Background */
+  --color-background: #f8f9f9;
+  --color-on-background: #191c1c;
+
+  /* Outline */
+  --color-outline: #737971;
+  --color-outline-variant: #c3c8c0;
+
+  /* Error */
+  --color-error: #ba1a1a;
+  --color-error-container: #ffdad6;
+  --color-on-error: #ffffff;
+  --color-on-error-container: #93000a;
+
+  /* Typography */
+  --font-display: 'Epilogue', sans-serif;
+  --font-headline: 'Epilogue', sans-serif;
+  --font-body: 'Manrope', sans-serif;
+  --font-label: 'Manrope', sans-serif;
+
+  /* Type scale */
+  --text-display-lg: 3.5rem;
+  --text-display-md: 2.75rem;
+  --text-display-sm: 2.25rem;
+  --text-headline-lg: 2rem;
+  --text-headline-md: 1.75rem;
+  --text-headline-sm: 1.5rem;
+  --text-title-lg: 1.375rem;
+  --text-title-md: 1rem;
+  --text-title-sm: 0.875rem;
+  --text-body-lg: 1rem;
+  --text-body-md: 0.875rem;
+  --text-body-sm: 0.75rem;
+  --text-label-lg: 0.875rem;
+  --text-label-md: 0.75rem;
+  --text-label-sm: 0.6875rem;
+
+  /* Spacing scale (base-2) */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.25rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space-10: 2.5rem;
+  --space-12: 3rem;
+  --space-16: 4rem;
+  --space-20: 5rem;
+  --space-24: 6rem;
+
+  /* Border radius */
+  --radius-sm: 0.25rem;
+  --radius-md: 0.375rem;
+  --radius-lg: 0.5rem;
+  --radius-xl: 0.75rem;
+  --radius-2xl: 1rem;
+  --radius-full: 9999px;
+
+  /* Shadows — ambient, overcast mountain light */
+  --shadow-ambient: 0 8px 24px rgba(25, 28, 28, 0.06);
+  --shadow-elevated: 0 4px 16px rgba(25, 28, 28, 0.08);
+  --shadow-card: 0 2px 8px rgba(25, 28, 28, 0.05);
+
+  /* Transitions */
+  --transition-fast: 120ms ease;
+  --transition-base: 200ms ease;
+  --transition-slow: 300ms ease;
+}
