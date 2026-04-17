@@ -1,20 +1,30 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { api } from '../services/api'
-import type { QuizSession, QuizQuestion, AnswerState, QuizState } from '../types'
+import type { QuizQuestion, AnswerState, QuizState } from '../types'
 
 const QUIZ_DURATION_SECONDS = 60
 
 export function useQuiz() {
   const [quizState, setQuizState] = useState<QuizState>('idle')
-  const [session, setSession] = useState<QuizSession | null>(null)
+  const [questions, setQuestions] = useState<QuizQuestion[]>([])
   const [currentIndex, setCurrentIndex] = useState(0)
   const [score, setScore] = useState(0)
   const [timeLeft, setTimeLeft] = useState(QUIZ_DURATION_SECONDS)
   const [answerState, setAnswerState] = useState<AnswerState>('unanswered')
-  const [wrongAnswers, setWrongAnswers] = useState<Set<string>>(new Set())
-  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const [wrongOption, setWrongOption] = useState<string | null>(null)
 
-  const currentQuestion: QuizQuestion | null = session?.questions[currentIndex] ?? null
+  // Refs so timer and async callbacks always see current values
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const sessionIdRef = useRef<string | null>(null)
+  const scoreRef = useRef(0)
+  const questionsRef = useRef<QuizQuestion[]>([])
+  const currentIndexRef = useRef(0)
+
+  scoreRef.current = score
+  questionsRef.current = questions
+  currentIndexRef.current = currentIndex
+
+  const currentQuestion = questions[currentIndex] ?? null
 
   const stopTimer = useCallback(() => {
     if (timerRef.current) {
@@ -23,31 +33,58 @@ export function useQuiz() {
     }
   }, [])
 
-  const finishQuiz = useCallback(async (finalScore: number, sessionId: string) => {
+  const finishQuiz = useCallback(async (finalScore: number) => {
     stopTimer()
     setQuizState('finished')
-    try {
-      await api.quiz.finish(sessionId, finalScore)
-    } catch {
-      // score still shown locally even if save fails
+    const sid = sessionIdRef.current
+    if (sid) {
+      try { await api.quiz.finish(sid, finalScore) } catch { /* show local score regardless */ }
     }
   }, [stopTimer])
 
-  const startQuiz = async () => {
-    setScore(0)
-    setCurrentIndex(0)
+  const advance = useCallback(async () => {
+    const nextIndex = currentIndexRef.current + 1
     setAnswerState('unanswered')
-    setWrongAnswers(new Set())
+    setWrongOption(null)
+
+    if (nextIndex < questionsRef.current.length) {
+      setCurrentIndex(nextIndex)
+      return
+    }
+
+    // Fetch the next unseen question from the backend
+    try {
+      const nextQ = await api.quiz.next(sessionIdRef.current!)
+      setQuestions(prev => [...prev, nextQ])
+      setCurrentIndex(nextIndex)
+    } catch {
+      // All peaks exhausted or session gone — end the quiz
+      finishQuiz(scoreRef.current)
+    }
+  }, [finishQuiz])
+
+  const startQuiz = async () => {
+    stopTimer()
+    setScore(0)
+    scoreRef.current = 0
+    setCurrentIndex(0)
+    currentIndexRef.current = 0
+    setQuestions([])
+    questionsRef.current = []
+    setAnswerState('unanswered')
+    setWrongOption(null)
     setTimeLeft(QUIZ_DURATION_SECONDS)
 
     const newSession = await api.quiz.start()
-    setSession(newSession)
+    sessionIdRef.current = newSession.sessionId
+    setQuestions(newSession.questions)
+    questionsRef.current = newSession.questions
     setQuizState('active')
 
     timerRef.current = setInterval(() => {
       setTimeLeft(prev => {
         if (prev <= 1) {
-          finishQuiz(score, newSession.sessionId)
+          finishQuiz(scoreRef.current)
           return 0
         }
         return prev - 1
@@ -56,26 +93,20 @@ export function useQuiz() {
   }
 
   const submitAnswer = async (answer: string) => {
-    if (!session || !currentQuestion || answerState !== 'unanswered') return
+    if (!currentQuestion || answerState !== 'unanswered') return
 
-    const result = await api.quiz.answer(session.sessionId, currentQuestion.id, answer)
+    const result = await api.quiz.answer(sessionIdRef.current!, currentQuestion.id, answer)
 
     if (result.correct) {
-      setScore(result.totalPoints)
+      const newScore = result.totalPoints
+      setScore(newScore)
+      scoreRef.current = newScore
       setAnswerState('correct')
-      setTimeout(() => {
-        setAnswerState('unanswered')
-        setWrongAnswers(new Set())
-        if (currentIndex + 1 >= session.questions.length) {
-          finishQuiz(result.totalPoints, session.sessionId)
-        } else {
-          setCurrentIndex(i => i + 1)
-        }
-      }, 800)
+      setTimeout(() => advance(), 400)
     } else {
-      setWrongAnswers(prev => new Set(prev).add(answer))
+      setWrongOption(answer)
       setAnswerState('wrong')
-      setTimeout(() => setAnswerState('unanswered'), 600)
+      setTimeout(() => advance(), 600)
     }
   }
 
@@ -87,10 +118,9 @@ export function useQuiz() {
     score,
     timeLeft,
     answerState,
-    wrongAnswers,
+    wrongOption,
     startQuiz,
     submitAnswer,
-    totalQuestions: session?.questions.length ?? 0,
-    currentIndex,
+    answeredCount: currentIndex,
   }
 }

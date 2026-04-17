@@ -14,11 +14,10 @@ export function QuizPage() {
     score,
     timeLeft,
     answerState,
-    wrongAnswers,
+    wrongOption,
     startQuiz,
     submitAnswer,
-    totalQuestions,
-    currentIndex,
+    answeredCount,
   } = useQuiz()
 
   if (quizState === 'finished') {
@@ -49,7 +48,7 @@ export function QuizPage() {
           <span className={styles.scoreValue}>{score.toLocaleString()}</span>
           <span className={styles.scoreLabel}>pts</span>
         </div>
-        <span className={styles.progress}>{currentIndex + 1} / {totalQuestions}</span>
+        <span className={styles.progress}>{answeredCount + 1}</span>
       </div>
 
       <div className={styles.card}>
@@ -71,8 +70,8 @@ export function QuizPage() {
               key={option}
               label={LABELS[i]}
               text={option}
-              isWrong={wrongAnswers.has(option)}
-              disabled={answerState === 'correct'}
+              isWrong={wrongOption === option}
+              disabled={answerState !== 'unanswered'}
               onClick={() => submitAnswer(option)}
             />
           ))}

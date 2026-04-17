@@ -1,4 +1,4 @@
-import type { QuizSession, AnswerResult, RankingEntry, User } from '../types'
+import type { QuizSession, QuizQuestion, AnswerResult, RankingEntry, User } from '../types'
 
 const BASE_URL = '/api'
 
@@ -29,6 +29,8 @@ export const api = {
         method: 'POST',
         body: JSON.stringify({ sessionId, questionId, answer }),
       }),
+    next: (sessionId: string) =>
+      request<QuizQuestion>(`/quiz/next/${sessionId}`),
     finish: (sessionId: string, score: number) =>
       request<{ rank: number }>('/quiz/finish', {
         method: 'POST',

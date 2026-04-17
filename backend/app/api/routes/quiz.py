@@ -11,7 +11,7 @@ from ...api.routes.auth import get_current_user
 router = APIRouter(prefix="/quiz", tags=["quiz"])
 
 POINTS_PER_CORRECT = 100
-QUIZ_SIZE = 10
+INITIAL_BATCH = 10
 
 # In-memory session store (replace with Redis for production)
 _sessions: dict[str, dict] = {}
@@ -27,9 +27,25 @@ def _best_image(peak: Peak) -> str | None:
     return None
 
 
-@router.post("/start", response_model=QuizSession)
-def start_quiz(db: Session = Depends(get_db)):
-    peaks = (
+def _make_question(peak: Peak, all_peaks: list[Peak]) -> QuizQuestion:
+    distractors = random.sample([p for p in all_peaks if p.id != peak.id], 3)
+    options = [peak.name] + [d.name for d in distractors]
+    random.shuffle(options)
+    return QuizQuestion(
+        id=peak.id,
+        peak=PeakOut(
+            id=peak.id,
+            name=peak.name,
+            imageUrl=_best_image(peak) or "",
+            heightM=peak.elevation or 0,
+            country=peak.region or "",
+        ),
+        options=options,
+    )
+
+
+def _eligible_peaks(db: Session) -> list[Peak]:
+    return (
         db.query(Peak)
         .join(Picture)
         .filter(Picture.cdn_url.isnot(None))
@@ -37,34 +53,43 @@ def start_quiz(db: Session = Depends(get_db)):
         .distinct()
         .all()
     )
+
+
+@router.post("/start", response_model=QuizSession)
+def start_quiz(db: Session = Depends(get_db)):
+    peaks = _eligible_peaks(db)
     if len(peaks) < 4:
         raise HTTPException(status_code=503, detail="Not enough peaks in database")
 
-    selected = random.sample(peaks, min(QUIZ_SIZE, len(peaks)))
-    questions = []
-    for peak in selected:
-        distractors = random.sample([p for p in peaks if p.id != peak.id], 3)
-        options = [peak.name] + [d.name for d in distractors]
-        random.shuffle(options)
-        questions.append(QuizQuestion(
-            id=peak.id,
-            peak=PeakOut(
-                id=peak.id,
-                name=peak.name,
-                imageUrl=_best_image(peak) or "",
-                heightM=peak.elevation or 0,
-                country=peak.region or "",
-            ),
-            options=options,
-        ))
+    selected = random.sample(peaks, min(INITIAL_BATCH, len(peaks)))
+    questions = [_make_question(p, peaks) for p in selected]
 
     session_id = str(uuid.uuid4())
     _sessions[session_id] = {
-        "questions": {q.id: q.peak.name for q in questions},
+        "answers": {q.id: q.peak.name for q in questions},
+        "seen_ids": {p.id for p in selected},
         "score": 0,
     }
 
     return QuizSession(sessionId=session_id, questions=questions)
+
+
+@router.get("/next/{session_id}", response_model=QuizQuestion)
+def next_question(session_id: str, db: Session = Depends(get_db)):
+    session = _sessions.get(session_id)
+    if not session:
+        raise HTTPException(status_code=404, detail="Session not found")
+
+    peaks = _eligible_peaks(db)
+    unseen = [p for p in peaks if p.id not in session["seen_ids"]]
+    if not unseen:
+        raise HTTPException(status_code=404, detail="No more peaks available")
+
+    peak = random.choice(unseen)
+    session["seen_ids"].add(peak.id)
+    session["answers"][peak.id] = peak.name
+
+    return _make_question(peak, peaks)
 
 
 @router.post("/answer", response_model=AnswerResult)
@@ -73,7 +98,7 @@ def answer(body: AnswerRequest):
     if not session:
         raise HTTPException(status_code=404, detail="Session not found")
 
-    correct_name = session["questions"].get(body.questionId)
+    correct_name = session["answers"].get(body.questionId)
     if correct_name is None:
         raise HTTPException(status_code=400, detail="Unknown question")
 
