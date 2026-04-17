@@ -3,6 +3,8 @@ import { api } from '../services/api'
 import type { QuizQuestion, AnswerState, QuizState } from '../types'
 
 const QUIZ_DURATION_SECONDS = 60
+const BONUS_THRESHOLD_SECONDS = 10
+const BONUS_SECONDS = 5
 
 export function useQuiz() {
   const [quizState, setQuizState] = useState<QuizState>('idle')
@@ -102,6 +104,9 @@ export function useQuiz() {
       setScore(newScore)
       scoreRef.current = newScore
       setAnswerState('correct')
+      if (timeLeft <= BONUS_THRESHOLD_SECONDS) {
+        setTimeLeft(prev => prev + BONUS_SECONDS)
+      }
       setTimeout(() => advance(), 400)
     } else {
       setWrongOption(answer)
