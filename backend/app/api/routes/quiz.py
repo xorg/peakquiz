@@ -1,10 +1,10 @@
 import random
 import uuid
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 
 from ...db.database import get_db
-from ...db.models import Peak, User
+from ...db.models import Peak, Picture, User
 from ...schemas.quiz import AnswerRequest, AnswerResult, FinishRequest, QuizSession, QuizQuestion, PeakOut
 from ...api.routes.auth import get_current_user
 
@@ -17,9 +17,26 @@ QUIZ_SIZE = 10
 _sessions: dict[str, dict] = {}
 
 
+def _best_image(peak: Peak) -> str | None:
+    for pic in peak.pictures:
+        if pic.cdn_url:
+            return pic.cdn_url
+    for pic in peak.pictures:
+        if pic.original_url:
+            return pic.original_url
+    return None
+
+
 @router.post("/start", response_model=QuizSession)
 def start_quiz(db: Session = Depends(get_db)):
-    peaks = db.query(Peak).all()
+    peaks = (
+        db.query(Peak)
+        .join(Picture)
+        .filter(Picture.cdn_url.isnot(None))
+        .options(joinedload(Peak.pictures))
+        .distinct()
+        .all()
+    )
     if len(peaks) < 4:
         raise HTTPException(status_code=503, detail="Not enough peaks in database")
 
@@ -34,9 +51,9 @@ def start_quiz(db: Session = Depends(get_db)):
             peak=PeakOut(
                 id=peak.id,
                 name=peak.name,
-                imageUrl=peak.image_url,
-                heightM=peak.height_m,
-                country=peak.country,
+                imageUrl=_best_image(peak) or "",
+                heightM=peak.elevation or 0,
+                country=peak.region or "",
             ),
             options=options,
         ))
