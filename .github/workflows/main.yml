@@ -3,7 +3,7 @@ name: Deploy static content to Pages
 
 env:
   BACKEND_HOST: "peakquiz.onrender.com"
-  BASE_PATH: "/peakquiz/"
+  BASE_PATH: "/"
 
 on:
   # Runs on pushes targeting the default branch
