@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useQuiz } from '../hooks/useQuiz'
 import { useAuth } from '../hooks/useAuth'
 import { useTranslation } from '../hooks/useTranslation'
+import { Flame } from 'lucide-react'
 import { Timer } from '../components/Timer'
 import { AnswerOption } from '../components/AnswerOption'
 import { LeaderboardPage } from './LeaderboardPage'
@@ -27,6 +28,8 @@ export function QuizPage() {
     wrongCount,
     maxWrong,
     answerHistory,
+    streak,
+    multiplier,
   } = useQuiz()
 
   const { user, refresh } = useAuth()
@@ -106,6 +109,12 @@ export function QuizPage() {
           <span className={styles.scoreValue}>{score.toLocaleString()}</span>
           <span className={styles.scoreLabel}>{t('pts')}</span>
         </div>
+        {multiplier > 1 && (
+          <div key={streak} className={styles.streak} aria-label={`Streak ${streak}, ${multiplier}x points`}>
+            <Flame size={12 + multiplier * 6} strokeWidth={2.5} />
+            <span className={styles.streakMult}>{multiplier}x</span>
+          </div>
+        )}
         <div className={styles.lives} aria-label={`${maxWrong - wrongCount} wrong answers left`}>
           {Array.from({ length: maxWrong }).map((_, i) => (
             <span

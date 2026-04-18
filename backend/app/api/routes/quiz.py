@@ -12,6 +12,15 @@ router = APIRouter(prefix="/quiz", tags=["quiz"])
 
 POINTS_PER_CORRECT = 100
 INITIAL_BATCH = 10
+# Streak: kicks in from the 3rd consecutive correct; multiplier grows with streak length, capped.
+STREAK_THRESHOLD = 3
+STREAK_MAX_MULTIPLIER = 4
+
+
+def _streak_multiplier(streak: int) -> int:
+    if streak < STREAK_THRESHOLD:
+        return 1
+    return min(streak - 1, STREAK_MAX_MULTIPLIER)
 
 # In-memory session store (replace with Redis for production)
 _sessions: dict[str, dict] = {}
@@ -72,6 +81,7 @@ def start_quiz(db: Session = Depends(get_db)):
         "score": 0,
         "correct_count": 0,
         "wrong_count": 0,
+        "streak": 0,
         # guess IDs accumulated during the session so we can link them to a Game on finish
         "guess_ids": [],
     }
@@ -112,10 +122,16 @@ def answer(
         raise HTTPException(status_code=400, detail="Unknown question")
 
     is_correct = body.answer.strip().lower() == correct_name.strip().lower()
+    points_earned = 0
     if is_correct:
-        session["score"] += POINTS_PER_CORRECT
+        session["streak"] += 1
+        multiplier = _streak_multiplier(session["streak"])
+        points_earned = POINTS_PER_CORRECT * multiplier
+        session["score"] += points_earned
         session["correct_count"] += 1
     else:
+        session["streak"] = 0
+        multiplier = 1
         session["wrong_count"] += 1
 
     if current_user:
@@ -127,8 +143,10 @@ def answer(
 
     return AnswerResult(
         correct=is_correct,
-        pointsEarned=POINTS_PER_CORRECT if is_correct else 0,
+        pointsEarned=points_earned,
         totalPoints=session["score"],
+        streak=session["streak"],
+        multiplier=multiplier,
     )
 
 

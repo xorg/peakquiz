@@ -29,6 +29,8 @@ export function useQuiz() {
   const [lastPoints, setLastPoints] = useState(0)
   const [wrongCount, setWrongCount] = useState(0)
   const [answerHistory, setAnswerHistory] = useState<AnswerRecord[]>([])
+  const [streak, setStreak] = useState(0)
+  const [multiplier, setMultiplier] = useState(1)
 
   // Refs so timer and async callbacks always see current values
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
@@ -101,6 +103,8 @@ export function useQuiz() {
     setWrongOption(null)
     setWrongCount(0)
     setAnswerHistory([])
+    setStreak(0)
+    setMultiplier(1)
     setTimeLeft(QUIZ_DURATION_SECONDS)
 
     const newSession = await api.quiz.start()
@@ -126,6 +130,8 @@ export function useQuiz() {
     const result = await api.quiz.answer(sessionIdRef.current!, currentQuestion.id, answer)
 
     setAnswerHistory(prev => [...prev, { peak: currentQuestion.peak, wasCorrect: result.correct }])
+    setStreak(result.streak)
+    setMultiplier(result.multiplier)
 
     if (result.correct) {
       const newScore = result.totalPoints
@@ -177,5 +183,7 @@ export function useQuiz() {
     wrongCount,
     maxWrong: MAX_WRONG_ANSWERS,
     answerHistory,
+    streak,
+    multiplier,
   }
 }

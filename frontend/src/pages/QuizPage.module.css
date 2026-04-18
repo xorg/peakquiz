@@ -110,6 +110,30 @@
   text-align: right;
 }
 
+.streak {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  background: linear-gradient(135deg, #ff8a3c, #ff4b3c);
+  color: #fff;
+  border-radius: 999px;
+  font-family: var(--font-label);
+  font-weight: 700;
+  font-size: var(--text-label-md);
+  animation: streakPop 0.4s ease-out;
+}
+
+.streakMult {
+  letter-spacing: 0.02em;
+}
+
+@keyframes streakPop {
+  0% { transform: scale(0.6); opacity: 0; }
+  60% { transform: scale(1.15); opacity: 1; }
+  100% { transform: scale(1); }
+}
+
 .lives {
   display: flex;
   gap: 4px;

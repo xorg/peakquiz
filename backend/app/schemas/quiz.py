@@ -31,6 +31,8 @@ class AnswerResult(BaseModel):
     correct: bool
     pointsEarned: int
     totalPoints: int
+    streak: int
+    multiplier: int
 
 
 class FinishRequest(BaseModel):

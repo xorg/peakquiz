@@ -22,6 +22,8 @@ export interface AnswerResult {
   correct: boolean
   pointsEarned: number
   totalPoints: number
+  streak: number
+  multiplier: number
 }
 
 export interface RankingEntry {
