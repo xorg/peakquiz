@@ -120,6 +120,58 @@
   color: var(--color-on-surface-variant);
 }
 
+.gamesList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.gameRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  padding: var(--space-3) var(--space-4);
+  background: var(--color-surface-container-lowest);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-card);
+}
+
+.gameScore {
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-size: var(--text-body-lg);
+  color: var(--color-primary);
+  min-width: 72px;
+}
+
+.gameCounts {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-family: var(--font-label);
+  font-size: var(--text-label-md);
+}
+
+.gameCorrect {
+  color: #2d6a4f;
+}
+
+.gameWrong {
+  color: var(--color-error);
+}
+
+.gameSep {
+  color: var(--color-on-surface-variant);
+}
+
+.gameDate {
+  font-family: var(--font-label);
+  font-size: var(--text-label-sm);
+  color: var(--color-on-surface-variant);
+  white-space: nowrap;
+}
+
 .loading {
   font-family: var(--font-body);
   font-size: var(--text-body-md);

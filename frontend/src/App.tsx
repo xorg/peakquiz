@@ -25,6 +25,7 @@ export default function App() {
         onLoginClick={handleLoginClick}
         onLogoutClick={logout}
         onProfileClick={() => setRoute('profile')}
+        onHomeClick={() => setRoute('home')}
       />
       {route === 'home' && <LandingPage onStart={() => setRoute('quiz')} />}
       {route === 'quiz' && <QuizPage />}

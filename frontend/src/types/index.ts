@@ -46,11 +46,20 @@ export interface TroublePeak {
   totalAttempts: number
 }
 
+export interface GameEntry {
+  id: number
+  score: number
+  correctCount: number
+  wrongCount: number
+  playedAt: string
+}
+
 export interface ProfileStats {
   totalGuesses: number
   correctGuesses: number
   accuracyPercent: number
   troublePeaks: TroublePeak[]
+  recentGames: GameEntry[]
 }
 
 export type QuizState = 'idle' | 'active' | 'nickname' | 'finished'

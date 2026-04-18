@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session, joinedload
 
 from ...db.database import get_db
-from ...db.models import Guess, Peak, Picture, User
+from ...db.models import Game, Guess, Peak, Picture, User
 from ...schemas.quiz import AnswerRequest, AnswerResult, FinishRequest, QuizSession, QuizQuestion, PeakOut
 from ...api.routes.auth import get_optional_user
 
@@ -70,6 +70,10 @@ def start_quiz(db: Session = Depends(get_db)):
         "answers": {q.id: q.peak.name for q in questions},
         "seen_ids": {p.id for p in selected},
         "score": 0,
+        "correct_count": 0,
+        "wrong_count": 0,
+        # guess IDs accumulated during the session so we can link them to a Game on finish
+        "guess_ids": [],
     }
 
     return QuizSession(sessionId=session_id, questions=questions)
@@ -110,9 +114,15 @@ def answer(
     is_correct = body.answer.strip().lower() == correct_name.strip().lower()
     if is_correct:
         session["score"] += POINTS_PER_CORRECT
+        session["correct_count"] += 1
+    else:
+        session["wrong_count"] += 1
 
     if current_user:
-        db.add(Guess(user_id=current_user.id, peak_id=body.questionId, is_correct=is_correct))
+        guess = Guess(user_id=current_user.id, peak_id=body.questionId, is_correct=is_correct)
+        db.add(guess)
+        db.flush()
+        session["guess_ids"].append(guess.id)
         db.commit()
 
     return AnswerResult(
@@ -128,12 +138,26 @@ def finish_quiz(
     db: Session = Depends(get_db),
     current_user: User | None = Depends(get_optional_user),
 ):
-    _sessions.pop(body.sessionId, None)
+    session = _sessions.pop(body.sessionId, None)
 
     if current_user:
         if body.score > current_user.best_score:
             current_user.best_score = body.score
-            db.commit()
+
+        if session:
+            game = Game(
+                user_id=current_user.id,
+                score=body.score,
+                correct_count=session.get("correct_count", 0),
+                wrong_count=session.get("wrong_count", 0),
+            )
+            db.add(game)
+            db.flush()
+            if session.get("guess_ids"):
+                db.query(Guess).filter(Guess.id.in_(session["guess_ids"])).update(
+                    {"game_id": game.id}, synchronize_session=False
+                )
+        db.commit()
     elif body.nickname and body.guestId:
         guest = db.get(User, body.guestId)
         if not guest:

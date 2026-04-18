@@ -47,6 +47,10 @@ export const translations = {
     troublePeaksEmpty: 'No trouble spots yet — keep playing!',
     wrong: 'wrong',
     attempts: 'attempts',
+    recentGamesTitle: 'Recent Games',
+    recentGamesEmpty: 'No games yet — play your first quiz!',
+    gameCorrect: 'correct',
+    gameWrong: 'wrong',
   },
   de: {
     // Landing
@@ -96,6 +100,10 @@ export const translations = {
     troublePeaksEmpty: 'Noch keine Schwächen — weiterspielen!',
     wrong: 'falsch',
     attempts: 'Versuche',
+    recentGamesTitle: 'Letzte Spiele',
+    recentGamesEmpty: 'Noch keine Spiele — spiel dein erstes Quiz!',
+    gameCorrect: 'richtig',
+    gameWrong: 'falsch',
   },
 } as const
 

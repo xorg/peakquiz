@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { api } from '../services/api'
 import { useTranslation } from '../hooks/useTranslation'
-import type { ProfileStats } from '../types'
+import type { ProfileStats, GameEntry } from '../types'
 import styles from './ProfilePage.module.css'
 
 export function ProfilePage() {
@@ -37,6 +37,29 @@ export function ProfilePage() {
           <span className={styles.statLabel}>{t('statAccuracy')}</span>
         </div>
       </div>
+
+      <section className={styles.section}>
+        <h2 className={styles.sectionTitle}>{t('recentGamesTitle')}</h2>
+        {stats.recentGames.length === 0 ? (
+          <p className={styles.empty}>{t('recentGamesEmpty')}</p>
+        ) : (
+          <div className={styles.gamesList}>
+            {stats.recentGames.map((game: GameEntry) => (
+              <div key={game.id} className={styles.gameRow}>
+                <span className={styles.gameScore}>{game.score} {t('pts')}</span>
+                <span className={styles.gameCounts}>
+                  <span className={styles.gameCorrect}>{game.correctCount} {t('gameCorrect')}</span>
+                  <span className={styles.gameSep}>·</span>
+                  <span className={styles.gameWrong}>{game.wrongCount} {t('gameWrong')}</span>
+                </span>
+                <span className={styles.gameDate}>
+                  {new Date(game.playedAt).toLocaleDateString()}
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
+      </section>
 
       <section className={styles.section}>
         <h2 className={styles.sectionTitle}>{t('troublePeaksTitle')}</h2>

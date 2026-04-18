@@ -12,6 +12,21 @@ class User(Base):
     created_at: Mapped[DateTime] = mapped_column(DateTime, server_default=func.now())
 
     guesses: Mapped[list["Guess"]] = relationship("Guess", back_populates="user")
+    games: Mapped[list["Game"]] = relationship("Game", back_populates="user", order_by="Game.created_at.desc()")
+
+
+class Game(Base):
+    __tablename__ = "games"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    user_id: Mapped[str] = mapped_column(String, ForeignKey("users.id"), nullable=False, index=True)
+    score: Mapped[int] = mapped_column(Integer, default=0)
+    correct_count: Mapped[int] = mapped_column(Integer, default=0)
+    wrong_count: Mapped[int] = mapped_column(Integer, default=0)
+    created_at: Mapped[DateTime] = mapped_column(DateTime, server_default=func.now())
+
+    user: Mapped["User"] = relationship("User", back_populates="games")
+    guesses: Mapped[list["Guess"]] = relationship("Guess", back_populates="game")
 
 
 class Guess(Base):
@@ -20,11 +35,13 @@ class Guess(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     user_id: Mapped[str] = mapped_column(String, ForeignKey("users.id"), nullable=False, index=True)
     peak_id: Mapped[int] = mapped_column(Integer, ForeignKey("peaks.id"), nullable=False, index=True)
+    game_id: Mapped[int | None] = mapped_column(Integer, ForeignKey("games.id"), nullable=True, index=True)
     is_correct: Mapped[bool] = mapped_column(Boolean, default=False)
     created_at: Mapped[DateTime] = mapped_column(DateTime, server_default=func.now())
 
     user: Mapped["User"] = relationship("User", back_populates="guesses")
     peak: Mapped["Peak"] = relationship("Peak")
+    game: Mapped["Game | None"] = relationship("Game", back_populates="guesses")
 
 
 class Peak(Base):

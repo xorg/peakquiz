@@ -17,6 +17,11 @@
   font-size: var(--text-title-lg);
   letter-spacing: 0.08em;
   color: var(--color-primary);
+  transition: opacity var(--transition-fast);
+}
+
+.brand:hover {
+  opacity: 0.75;
 }
 
 .actions {

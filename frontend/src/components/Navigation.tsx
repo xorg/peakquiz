@@ -7,14 +7,15 @@ interface Props {
   onLoginClick: () => void
   onLogoutClick: () => void
   onProfileClick: () => void
+  onHomeClick: () => void
 }
 
-export function Navigation({ user, onLoginClick, onLogoutClick, onProfileClick }: Props) {
+export function Navigation({ user, onLoginClick, onLogoutClick, onProfileClick, onHomeClick }: Props) {
   const { t } = useTranslation()
 
   return (
     <nav className={styles.nav}>
-      <span className={styles.brand}>PEAKQUIZ</span>
+      <button className={styles.brand} onClick={onHomeClick}>PEAKQUIZ</button>
       <div className={styles.actions}>
         {user ? (
           <>
