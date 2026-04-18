@@ -68,7 +68,7 @@ async def google_callback(request: Request, db: Session = Depends(get_db)):
         db.commit()
 
     access_token = create_access_token(user.id)
-    response = RedirectResponse(url=settings.frontend_url)
+    response = RedirectResponse(url=settings.origins_list[0])
     response.set_cookie(
         COOKIE_NAME,
         access_token,

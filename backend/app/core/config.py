@@ -11,7 +11,7 @@ class Settings(BaseSettings):
     secret_key: str
     # Comma-separated list of allowed frontend origins, e.g.:
     # ALLOWED_ORIGINS=https://gipfelraten.stefanschneider.me,https://xorg.github.io
-    allowed_origins: str = "http://localhost:5173,https://gipfelraten.stefanschneider.me"
+    allowed_origins: str = "https://gipfelraten.stefanschneider.me,http://localhost:5173,"
     backend_url: str = "http://localhost:8000"
     database_url: str = "sqlite:///./peakquiz.db"
 
