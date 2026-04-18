@@ -10,4 +10,4 @@ load_dotenv(Path(__file__).parent / '.env')
 
 from app.main import app as asgi_app  # noqa: E402
 
-application = ASGIMiddleware(asgi_app)
+application = ASGIMiddleware(asgi_app, lifespan="off")
