@@ -15,6 +15,7 @@ function getOrCreateGuestId(): string {
 }
 const BONUS_THRESHOLD_SECONDS = 10
 const BONUS_SECONDS = 5
+const MAX_WRONG_ANSWERS = 5
 
 export function useQuiz() {
   const [quizState, setQuizState] = useState<QuizState>('idle')
@@ -26,6 +27,7 @@ export function useQuiz() {
   const [wrongOption, setWrongOption] = useState<string | null>(null)
   const [correctOption, setCorrectOption] = useState<string | null>(null)
   const [lastPoints, setLastPoints] = useState(0)
+  const [wrongCount, setWrongCount] = useState(0)
 
   // Refs so timer and async callbacks always see current values
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
@@ -96,6 +98,7 @@ export function useQuiz() {
     questionsRef.current = []
     setAnswerState('unanswered')
     setWrongOption(null)
+    setWrongCount(0)
     setTimeLeft(QUIZ_DURATION_SECONDS)
 
     const newSession = await api.quiz.start()
@@ -134,7 +137,13 @@ export function useQuiz() {
     } else {
       setWrongOption(answer)
       setAnswerState('wrong')
-      setTimeout(() => advance(), 900)
+      const nextWrong = wrongCount + 1
+      setWrongCount(nextWrong)
+      if (nextWrong >= MAX_WRONG_ANSWERS) {
+        setTimeout(() => finishQuiz(), 900)
+      } else {
+        setTimeout(() => advance(), 900)
+      }
     }
   }
 
@@ -161,5 +170,7 @@ export function useQuiz() {
     answeredCount: currentIndex,
     correctOption,
     lastPoints,
+    wrongCount,
+    maxWrong: MAX_WRONG_ANSWERS,
   }
 }

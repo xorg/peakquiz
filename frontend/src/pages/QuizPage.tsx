@@ -24,6 +24,8 @@ export function QuizPage() {
     submitAnswer,
     submitNickname,
     answeredCount,
+    wrongCount,
+    maxWrong,
   } = useQuiz()
 
   const { user, refresh } = useAuth()
@@ -103,7 +105,14 @@ export function QuizPage() {
           <span className={styles.scoreValue}>{score.toLocaleString()}</span>
           <span className={styles.scoreLabel}>{t('pts')}</span>
         </div>
-        <span className={styles.progress}>{answeredCount + 1}</span>
+        <div className={styles.lives} aria-label={`${maxWrong - wrongCount} wrong answers left`}>
+          {Array.from({ length: maxWrong }).map((_, i) => (
+            <span
+              key={i}
+              className={`${styles.life} ${i < wrongCount ? styles.lifeLost : ''}`}
+            />
+          ))}
+        </div>
       </div>
 
       <div className={`${styles.card} ${answerState === 'correct' ? styles.cardCorrect : answerState === 'wrong' ? styles.cardWrong : ''}`}>

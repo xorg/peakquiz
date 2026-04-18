@@ -110,6 +110,26 @@
   text-align: right;
 }
 
+.lives {
+  display: flex;
+  gap: 4px;
+  min-width: 3.5rem;
+  justify-content: flex-end;
+}
+
+.life {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--color-primary);
+  transition: background var(--transition-fast), transform var(--transition-fast);
+}
+
+.lifeLost {
+  background: var(--color-outline-variant, #c9ccd1);
+  transform: scale(0.75);
+}
+
 .card {
   display: flex;
   flex-direction: column;
