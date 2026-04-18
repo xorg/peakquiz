@@ -137,7 +137,7 @@ def finish_quiz(
     elif body.nickname and body.guestId:
         guest = db.get(User, body.guestId)
         if not guest:
-            guest = User(id=body.guest_id, username=body.nickname, best_score=body.score)
+            guest = User(id=body.guestId, username=body.nickname, best_score=body.score)
             db.add(guest)
         else:
             guest.username = body.nickname
