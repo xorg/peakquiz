@@ -56,6 +56,82 @@
   box-shadow: var(--shadow-ambient);
 }
 
+.breakdown {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.breakdownToggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-3) var(--space-5);
+  background: var(--color-surface-container-lowest);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-card);
+  font-family: var(--font-label);
+  font-weight: 600;
+  font-size: var(--text-label-lg);
+  color: var(--color-on-surface);
+  cursor: pointer;
+  transition: background var(--transition-fast);
+}
+
+.breakdownToggle:hover {
+  background: var(--color-surface-container);
+}
+
+.chevron {
+  transition: transform var(--transition-fast);
+  color: var(--color-on-surface-variant);
+}
+
+.chevronOpen {
+  transform: rotate(180deg);
+}
+
+.breakdownList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.breakdownItem {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-2) var(--space-4);
+  background: var(--color-surface-container-lowest);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-card);
+}
+
+.breakdownImage {
+  width: 48px;
+  height: 48px;
+  border-radius: var(--radius-md, 8px);
+  object-fit: cover;
+  object-position: top;
+  flex-shrink: 0;
+}
+
+.breakdownName {
+  flex: 1;
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: var(--text-body-md);
+  color: var(--color-on-surface);
+}
+
+.iconCorrect {
+  color: #2d6a4f;
+}
+
+.iconWrong {
+  color: var(--color-error);
+}
+
 .playRow {
   display: flex;
   justify-content: center;

@@ -62,6 +62,11 @@ export interface ProfileStats {
   recentGames: GameEntry[]
 }
 
+export interface AnswerRecord {
+  peak: Peak
+  wasCorrect: boolean
+}
+
 export type QuizState = 'idle' | 'active' | 'nickname' | 'finished'
 
 export type AnswerState = 'unanswered' | 'correct' | 'wrong'

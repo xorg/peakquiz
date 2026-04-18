@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { api } from '../services/api'
-import type { QuizQuestion, AnswerState, QuizState } from '../types'
+import type { QuizQuestion, AnswerState, QuizState, AnswerRecord } from '../types'
 
 const QUIZ_DURATION_SECONDS = 60
 
@@ -28,6 +28,7 @@ export function useQuiz() {
   const [correctOption, setCorrectOption] = useState<string | null>(null)
   const [lastPoints, setLastPoints] = useState(0)
   const [wrongCount, setWrongCount] = useState(0)
+  const [answerHistory, setAnswerHistory] = useState<AnswerRecord[]>([])
 
   // Refs so timer and async callbacks always see current values
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
@@ -99,6 +100,7 @@ export function useQuiz() {
     setAnswerState('unanswered')
     setWrongOption(null)
     setWrongCount(0)
+    setAnswerHistory([])
     setTimeLeft(QUIZ_DURATION_SECONDS)
 
     const newSession = await api.quiz.start()
@@ -122,6 +124,8 @@ export function useQuiz() {
     if (!currentQuestion || answerState !== 'unanswered') return
 
     const result = await api.quiz.answer(sessionIdRef.current!, currentQuestion.id, answer)
+
+    setAnswerHistory(prev => [...prev, { peak: currentQuestion.peak, wasCorrect: result.correct }])
 
     if (result.correct) {
       const newScore = result.totalPoints
@@ -172,5 +176,6 @@ export function useQuiz() {
     lastPoints,
     wrongCount,
     maxWrong: MAX_WRONG_ANSWERS,
+    answerHistory,
   }
 }

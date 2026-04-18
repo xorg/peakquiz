@@ -26,6 +26,7 @@ export function QuizPage() {
     answeredCount,
     wrongCount,
     maxWrong,
+    answerHistory,
   } = useQuiz()
 
   const { user, refresh } = useAuth()
@@ -39,7 +40,7 @@ export function QuizPage() {
   }, [user])
 
   if (quizState === 'finished') {
-    return <LeaderboardPage finalScore={score} onPlayAgain={startQuiz} />
+    return <LeaderboardPage finalScore={score} onPlayAgain={startQuiz} answerHistory={answerHistory} />
   }
 
   if (quizState === 'nickname') {

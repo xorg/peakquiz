@@ -51,6 +51,7 @@ export const translations = {
     recentGamesEmpty: 'No games yet — play your first quiz!',
     gameCorrect: 'correct',
     gameWrong: 'wrong',
+    breakdownTitle: 'Your answers',
   },
   de: {
     // Landing
@@ -104,6 +105,7 @@ export const translations = {
     recentGamesEmpty: 'Noch keine Spiele — spiel dein erstes Quiz!',
     gameCorrect: 'richtig',
     gameWrong: 'falsch',
+    breakdownTitle: 'Deine Antworten',
   },
 } as const
 
