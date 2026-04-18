@@ -73,8 +73,8 @@ async def google_callback(request: Request, db: Session = Depends(get_db)):
         COOKIE_NAME,
         access_token,
         httponly=True,
-        samesite="lax",
-        secure=settings.backend_url.startswith("https"),
+        samesite="none",
+        secure=True,
         max_age=60 * 60 * 24 * 30,
     )
     return response
@@ -87,5 +87,5 @@ def me(current_user: User = Depends(get_current_user)):
 
 @router.post("/logout")
 def logout(response: Response):
-    response.delete_cookie(COOKIE_NAME)
+    response.delete_cookie(COOKIE_NAME, samesite="none", secure=True)
     return {"ok": True}
