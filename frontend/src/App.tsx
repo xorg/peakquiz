@@ -27,10 +27,11 @@ export default function App() {
         onLogoutClick={logout}
         onProfileClick={() => setRoute('profile')}
         onHomeClick={() => setRoute('home')}
+        onLeaderboardClick={() => setRoute('leaderboard')}
       />
       {route === 'home' && <LandingPage onStart={() => setRoute('quiz')} />}
       {route === 'quiz' && <QuizPage />}
-      {route === 'leaderboard' && <LeaderboardPage />}
+      {route === 'leaderboard' && <LeaderboardPage onPlay={() => setRoute('quiz')} />}
       {route === 'profile' && <ProfilePage />}
     </>
   )

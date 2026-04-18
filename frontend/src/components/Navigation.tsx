@@ -8,15 +8,19 @@ interface Props {
   onLogoutClick: () => void
   onProfileClick: () => void
   onHomeClick: () => void
+  onLeaderboardClick: () => void
 }
 
-export function Navigation({ user, onLoginClick, onLogoutClick, onProfileClick, onHomeClick }: Props) {
+export function Navigation({ user, onLoginClick, onLogoutClick, onProfileClick, onHomeClick, onLeaderboardClick }: Props) {
   const { t } = useTranslation()
 
   return (
     <nav className={styles.nav}>
-      <button className={styles.brand} onClick={onHomeClick}>PEAKQUIZ</button>
+      <button className={styles.brand} onClick={onHomeClick}>GIPFELRATEN</button>
       <div className={styles.actions}>
+        <button className={styles.navLink} onClick={onLeaderboardClick}>
+          {t('globalRankings')}
+        </button>
         {user ? (
           <>
             <button className={styles.usernameBtn} onClick={onProfileClick}>

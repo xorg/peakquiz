@@ -54,7 +54,7 @@ export const translations = {
   },
   de: {
     // Landing
-    eyebrow: 'DIE BERG-HERAUSFORDERUNG',
+    eyebrow: '',
     headline: 'Wie gut kennst du die Gipfel der Schweiz?',
     tagline: '60 Sekunden. Bergfotos. Wie viele kannst du benennen?',
     heroAlt: 'Blick von einem felsigen Alpenvorsprung in ein nebelgefülltes Tal',

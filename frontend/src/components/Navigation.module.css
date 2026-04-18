@@ -30,6 +30,18 @@
   gap: var(--space-4);
 }
 
+.navLink {
+  font-family: var(--font-label);
+  font-weight: 500;
+  font-size: var(--text-label-lg);
+  color: var(--color-on-surface-variant);
+  transition: color var(--transition-fast);
+}
+
+.navLink:hover {
+  color: var(--color-primary);
+}
+
 .usernameBtn {
   font-family: var(--font-label);
   font-size: var(--text-label-lg);

@@ -8,9 +8,10 @@ import styles from './LeaderboardPage.module.css'
 interface Props {
   finalScore?: number
   onPlayAgain?: () => void
+  onPlay?: () => void
 }
 
-export function LeaderboardPage({ finalScore, onPlayAgain }: Props) {
+export function LeaderboardPage({ finalScore, onPlayAgain, onPlay }: Props) {
   const [entries, setEntries] = useState<RankingEntry[]>([])
   const [loading, setLoading] = useState(true)
   const { t } = useTranslation()
@@ -33,6 +34,12 @@ export function LeaderboardPage({ finalScore, onPlayAgain }: Props) {
               {t('playAgain')}
             </button>
           )}
+        </div>
+      )}
+
+      {onPlay && finalScore === undefined && (
+        <div className={styles.playRow}>
+          <button className={styles.playAgain} onClick={onPlay}>{t('quizStart')}</button>
         </div>
       )}
 

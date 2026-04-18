@@ -56,6 +56,11 @@
   box-shadow: var(--shadow-ambient);
 }
 
+.playRow {
+  display: flex;
+  justify-content: center;
+}
+
 .leaderboard {
   display: flex;
   flex-direction: column;
