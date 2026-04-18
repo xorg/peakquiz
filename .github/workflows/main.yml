@@ -2,7 +2,7 @@
 name: Deploy static content to Pages
 
 env:
-  BACKEND_HOST: "xorg112.pythonanywhere.com"
+  BACKEND_HOST: "peakquiz.onrender.com/
   BASE_PATH: "/"
 
 on:
