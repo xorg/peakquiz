@@ -2,7 +2,7 @@
 name: Deploy static content to Pages
 
 env:
-  BACKEND_HOST: "peakquiz.onrender.com"
+  BACKEND_HOST: "peakquiz-backend-295049646559.europe-west1.run.app"
   BASE_PATH: "/"
 
 on:
