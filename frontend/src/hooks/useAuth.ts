@@ -18,5 +18,13 @@ export function useAuth() {
     setUser(null)
   }
 
-  return { user, loading, logout }
+  const refresh = async () => {
+    try {
+      setUser(await api.auth.me())
+    } catch {
+      setUser(null)
+    }
+  }
+
+  return { user, loading, logout, refresh }
 }

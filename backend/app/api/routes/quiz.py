@@ -141,6 +141,8 @@ def finish_quiz(
     session = _sessions.pop(body.sessionId, None)
 
     if current_user:
+        if body.nickname:
+            current_user.username = body.nickname
         if body.score > current_user.best_score:
             current_user.best_score = body.score
 

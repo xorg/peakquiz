@@ -26,7 +26,7 @@ export function QuizPage() {
     answeredCount,
   } = useQuiz()
 
-  const { user } = useAuth()
+  const { user, refresh } = useAuth()
   const { t } = useTranslation()
   const [nickname, setNickname] = useState(() => localStorage.getItem('pq_nickname') ?? '')
 
@@ -41,11 +41,12 @@ export function QuizPage() {
   }
 
   if (quizState === 'nickname') {
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
       e.preventDefault()
       const name = nickname.trim()
       if (name) localStorage.setItem('pq_nickname', name)
-      submitNickname(name)
+      await submitNickname(name)
+      if (user && name) refresh()
     }
 
     return (
