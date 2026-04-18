@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { api } from './services/api'
 import { Navigation } from './components/Navigation'
 import { LandingPage } from './pages/LandingPage'
 import { QuizPage } from './pages/QuizPage'
@@ -13,7 +14,7 @@ export default function App() {
   const { user, loading, logout } = useAuth()
 
   const handleLoginClick = () => {
-    window.location.href = '/api/auth/google/login'
+    window.location.href = api.auth.googleLoginUrl()
   }
 
   if (loading) return null
