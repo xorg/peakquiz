@@ -49,7 +49,7 @@ def get_current_user(request: Request, db: Session = Depends(get_db)) -> User:
 
 @router.get("/google/login")
 async def google_login(request: Request):
-    redirect_uri = request.url_for("google_callback")
+    redirect_uri = f"{settings.backend_url}/api/auth/google/callback"
     return await oauth.google.authorize_redirect(request, redirect_uri)
 
 
@@ -74,7 +74,7 @@ async def google_callback(request: Request, db: Session = Depends(get_db)):
         access_token,
         httponly=True,
         samesite="lax",
-        secure=False,  # set True in production with HTTPS
+        secure=settings.backend_url.startswith("https"),
         max_age=60 * 60 * 24 * 30,
     )
     return response

@@ -10,6 +10,7 @@ class Settings(BaseSettings):
     google_client_secret: str
     secret_key: str
     frontend_url: str = "http://localhost:5173"
+    backend_url: str = "http://localhost:8000"
     database_url: str = "sqlite:///./peakquiz.db"
 
     class Config:
