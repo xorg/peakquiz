@@ -9,9 +9,15 @@ class Settings(BaseSettings):
     google_client_id: str
     google_client_secret: str
     secret_key: str
-    frontend_url: str = "http://localhost:5173"
+    # Comma-separated list of allowed frontend origins, e.g.:
+    # ALLOWED_ORIGINS=https://gipfelraten.stefanschneider.me,https://xorg.github.io
+    allowed_origins: str = "http://localhost:5173,https://gipfelraten.stefanschneider.me"
     backend_url: str = "http://localhost:8000"
     database_url: str = "sqlite:///./peakquiz.db"
+
+    @property
+    def origins_list(self) -> list[str]:
+        return [o.strip() for o in self.allowed_origins.split(",") if o.strip()]
 
     class Config:
         env_file = _ENV_FILE
