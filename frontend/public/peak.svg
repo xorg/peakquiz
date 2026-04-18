@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="none">
+  <!-- Main peak -->
+  <polygon points="16,4 28,26 4,26" fill="#2563a8"/>
+  <!-- Snow cap -->
+  <polygon points="16,4 20,13 12,13" fill="#f0f8ff"/>
+</svg>
