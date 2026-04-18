@@ -12,6 +12,7 @@ dependencies = [
     "python-dotenv==1.0.1",
     "pydantic-settings==2.5.2",
     "itsdangerous==2.2.0",
+    "a2wsgi>=1.10.10",
 ]
 
 [dependency-groups]
