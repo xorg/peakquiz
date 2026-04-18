@@ -1,6 +1,8 @@
 import type { QuizSession, QuizQuestion, AnswerResult, RankingEntry, User, ProfileStats } from '../types'
 
-const BASE_URL = '/api'
+const BASE_URL = import.meta.env.VITE_BACKEND_HOST
+  ? `https://${import.meta.env.VITE_BACKEND_HOST}/api`
+  : '/api'
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const res = await fetch(`${BASE_URL}${path}`, {
