@@ -39,19 +39,20 @@
 
 .playAgain {
   margin-top: var(--space-2);
-  font-family: var(--font-label);
+  font-family: var(--font-display);
   font-weight: 700;
   font-size: var(--text-title-md);
-  letter-spacing: 0.04em;
+  letter-spacing: 0.02em;
   padding: var(--space-3) var(--space-8);
-  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-container) 100%);
+  background: var(--color-primary);
   color: var(--color-on-primary);
-  border-radius: 0;
+  border-radius: var(--radius-full);
   box-shadow: var(--shadow-elevated);
-  transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+  transition: background var(--transition-fast), transform var(--transition-fast), box-shadow var(--transition-fast);
 }
 
 .playAgain:hover {
+  background: #255470;
   transform: translateY(-2px);
   box-shadow: var(--shadow-ambient);
 }

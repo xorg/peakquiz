@@ -8,7 +8,8 @@
   position: relative;
   min-height: 80dvh;
   display: flex;
-  align-items: flex-end;
+  align-items: center;
+  justify-content: center;
   overflow: hidden;
 }
 
@@ -49,6 +50,7 @@
   z-index: 1;
   padding: var(--space-12) var(--space-6);
   max-width: 680px;
+  text-align: center;
 }
 
 .eyebrow {
@@ -74,24 +76,26 @@
   color: var(--color-primary-fixed-dim);
   margin-bottom: var(--space-8);
   max-width: 420px;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .ctaButton {
   display: inline-block;
-  font-family: var(--font-label);
+  font-family: var(--font-display);
   font-weight: 700;
   font-size: var(--text-title-md);
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
+  letter-spacing: 0.02em;
   padding: var(--space-4) var(--space-10);
-  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-container) 100%);
+  background: var(--color-primary);
   color: var(--color-on-primary);
-  border-radius: 0;
+  border-radius: var(--radius-full);
   box-shadow: var(--shadow-elevated);
-  transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+  transition: background var(--transition-fast), transform var(--transition-fast), box-shadow var(--transition-fast);
 }
 
 .ctaButton:hover {
+  background: #255470;
   transform: translateY(-2px);
   box-shadow: var(--shadow-ambient);
 }
@@ -102,11 +106,16 @@
 
 /* Features strip */
 .features {
+  padding: var(--space-8) var(--space-6);
+  background: var(--color-surface-container-low);
+}
+
+.featuresInner {
+  max-width: 960px;
+  margin: 0 auto;
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: var(--space-2);
-  padding: var(--space-8) var(--space-6);
-  background: var(--color-surface-container-low);
 }
 
 .feature {

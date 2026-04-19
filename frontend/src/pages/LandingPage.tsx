@@ -30,20 +30,22 @@ export function LandingPage({ onStart }: Props) {
       </div>
 
       <section className={styles.features}>
-        <div className={styles.feature}>
-          <Timer className={styles.featureIcon} strokeWidth={1.5} />
-          <h3>{t('feature1Title')}</h3>
-          <p>{t('feature1Desc')}</p>
-        </div>
-        <div className={styles.feature}>
-          <MountainSnow className={styles.featureIcon} strokeWidth={1.5} />
-          <h3>{t('feature2Title')}</h3>
-          <p>{t('feature2Desc')}</p>
-        </div>
-        <div className={styles.feature}>
-          <Trophy className={styles.featureIcon} strokeWidth={1.5} />
-          <h3>{t('feature3Title')}</h3>
-          <p>{t('feature3Desc')}</p>
+        <div className={styles.featuresInner}>
+          <div className={styles.feature}>
+            <Timer className={styles.featureIcon} strokeWidth={1.5} />
+            <h3>{t('feature1Title')}</h3>
+            <p>{t('feature1Desc')}</p>
+          </div>
+          <div className={styles.feature}>
+            <MountainSnow className={styles.featureIcon} strokeWidth={1.5} />
+            <h3>{t('feature2Title')}</h3>
+            <p>{t('feature2Desc')}</p>
+          </div>
+          <div className={styles.feature}>
+            <Trophy className={styles.featureIcon} strokeWidth={1.5} />
+            <h3>{t('feature3Title')}</h3>
+            <p>{t('feature3Desc')}</p>
+          </div>
         </div>
       </section>
     </main>

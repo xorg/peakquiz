@@ -23,20 +23,20 @@
 }
 
 .startBtn {
-  font-family: var(--font-label);
+  font-family: var(--font-display);
   font-weight: 700;
   font-size: var(--text-title-md);
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
+  letter-spacing: 0.02em;
   padding: var(--space-4) var(--space-10);
-  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-container) 100%);
+  background: var(--color-primary);
   color: var(--color-on-primary);
-  border-radius: 0;
+  border-radius: var(--radius-full);
   box-shadow: var(--shadow-elevated);
-  transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+  transition: background var(--transition-fast), transform var(--transition-fast), box-shadow var(--transition-fast);
 }
 
 .startBtn:hover {
+  background: #255470;
   transform: translateY(-2px);
   box-shadow: var(--shadow-ambient);
 }
@@ -293,19 +293,19 @@
 .nicknameSave {
   flex: 1;
   padding: var(--space-4) var(--space-5);
-  font-family: var(--font-label);
+  font-family: var(--font-display);
   font-weight: 700;
   font-size: var(--text-label-lg);
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-container) 100%);
+  letter-spacing: 0.02em;
+  background: var(--color-primary);
   color: var(--color-on-primary);
-  border-radius: 0;
+  border-radius: var(--radius-lg);
   box-shadow: var(--shadow-elevated);
-  transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+  transition: background var(--transition-fast), transform var(--transition-fast), box-shadow var(--transition-fast);
 }
 
 .nicknameSave:hover {
+  background: #255470;
   transform: translateY(-2px);
   box-shadow: var(--shadow-ambient);
 }

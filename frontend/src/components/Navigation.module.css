@@ -54,18 +54,18 @@
 }
 
 .btnPrimary {
-  font-family: var(--font-label);
+  font-family: var(--font-display);
   font-weight: 600;
   font-size: var(--text-label-lg);
   padding: var(--space-2) var(--space-5);
-  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-container) 100%);
+  background: var(--color-primary);
   color: var(--color-on-primary);
-  border-radius: 0;
-  transition: opacity var(--transition-fast);
+  border-radius: var(--radius-lg);
+  transition: background var(--transition-fast);
 }
 
 .btnPrimary:hover {
-  opacity: 0.9;
+  background: #255470;
 }
 
 .btnSecondary {
