@@ -13,7 +13,7 @@ def add_guesses(db, user_id: str, peak_id: int, correct: int, wrong: int):
 class TestProfileStats:
     def test_requires_authentication(self, client):
         resp = client.get("/api/profile/stats")
-        assert resp.status_code == 401
+        assert resp.status_code == 404
 
     def test_empty_stats_for_new_user(self, auth_client):
         data = auth_client.get("/api/profile/stats").json()
@@ -86,3 +86,47 @@ class TestProfileStats:
         data = auth_client.get("/api/profile/stats").json()
         assert data["totalGuesses"] == 1
         assert data["correctGuesses"] == 1
+
+
+class TestGuestProfileStats:
+    """Guests should see their own stats when playing a full quiz.
+    Currently the /answer endpoint only persists guesses for authenticated users,
+    and /finish only creates Game rows for authenticated users — so these assertions fail."""
+
+    def test_guest_stats_after_full_quiz(self, client, peaks):
+        guest_id = "guest-stats-uuid"
+        session = client.post("/api/quiz/start").json()
+        sid = session["sessionId"]
+
+        correct_count = 0
+        wrong_count = 0
+        for i, q in enumerate(session["questions"]):
+            if i % 2 == 0:
+                # correct answer
+                client.post("/api/quiz/answer", json={
+                    "sessionId": sid, "questionId": q["id"], "answer": q["peak"]["name"],
+                })
+                correct_count += 1
+            else:
+                # wrong answer
+                wrong = next(opt for opt in q["options"] if opt != q["peak"]["name"])
+                client.post("/api/quiz/answer", json={
+                    "sessionId": sid, "questionId": q["id"], "answer": wrong,
+                })
+                wrong_count += 1
+
+        client.post("/api/quiz/finish", json={
+            "sessionId": sid,
+            "score": correct_count * 100,
+            "nickname": "GuestStatsPlayer",
+            "guestId": guest_id,
+        })
+
+        data = client.get(f"/api/profile/stats?guestId={guest_id}").json()
+        assert data["username"] == "GuestStatsPlayer"
+        assert data["isGuest"] is True
+        assert data["totalGuesses"] == correct_count + wrong_count
+        assert data["correctGuesses"] == correct_count
+        assert len(data["recentGames"]) == 1
+        assert data["recentGames"][0]["correctCount"] == correct_count
+        assert data["recentGames"][0]["wrongCount"] == wrong_count

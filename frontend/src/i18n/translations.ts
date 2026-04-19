@@ -29,7 +29,7 @@ export const translations = {
     // Nickname screen
     nicknameTitle: 'Enter your name for the rankings',
     nicknamePlaceholder: 'Your name',
-    nicknameSave: 'Save Score',
+    nicknameSave: 'Save Name',
     nicknameSkip: 'Skip',
 
     // Leaderboard
@@ -52,6 +52,7 @@ export const translations = {
     gameCorrect: 'correct',
     gameWrong: 'wrong',
     breakdownTitle: 'Your answers',
+    profileEmptyGuest: 'Play a quiz to create your profile.',
   },
   de: {
     // Landing
@@ -83,7 +84,7 @@ export const translations = {
     // Nickname screen
     nicknameTitle: 'Gib deinen Namen für die Rangliste ein',
     nicknamePlaceholder: 'Dein Name',
-    nicknameSave: 'Punkte speichern',
+    nicknameSave: 'Namen speichern',
     nicknameSkip: 'Überspringen',
 
     // Leaderboard
@@ -106,6 +107,7 @@ export const translations = {
     gameCorrect: 'richtig',
     gameWrong: 'falsch',
     breakdownTitle: 'Deine Antworten',
+    profileEmptyGuest: 'Spiele ein Quiz, um dein Profil zu erstellen.',
   },
 } as const
 

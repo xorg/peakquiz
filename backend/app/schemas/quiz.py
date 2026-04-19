@@ -25,6 +25,7 @@ class AnswerRequest(BaseModel):
     sessionId: str
     questionId: int
     answer: str
+    guestId: str | None = None
 
 
 class AnswerResult(BaseModel):

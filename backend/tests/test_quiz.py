@@ -82,7 +82,8 @@ class TestAnswer:
             "questionId": session["questions"][3]["id"],
             "answer": session["questions"][3]["peak"]["name"],
         })
-        assert resp.json()["totalPoints"] == 400
+        # streak kicks in at 3rd correct: 100 + 100 + 200 + 300 = 700
+        assert resp.json()["totalPoints"] == 700
 
     def test_unknown_session_returns_404(self, client, peaks):
         resp = client.post("/api/quiz/answer", json={

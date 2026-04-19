@@ -21,15 +21,13 @@ export function Navigation({ user, onLoginClick, onLogoutClick, onProfileClick, 
         <button className={styles.navLink} onClick={onLeaderboardClick}>
           {t('globalRankings')}
         </button>
+        <button className={styles.navLink} onClick={onProfileClick}>
+          {user ? user.username : t('profileTitle')}
+        </button>
         {user ? (
-          <>
-            <button className={styles.usernameBtn} onClick={onProfileClick}>
-              {user.username}
-            </button>
-            <button className={styles.btnSecondary} onClick={onLogoutClick}>
-              {t('signOut')}
-            </button>
-          </>
+          <button className={styles.btnSecondary} onClick={onLogoutClick}>
+            {t('signOut')}
+          </button>
         ) : (
           <button className={styles.btnPrimary} onClick={onLoginClick}>
             {t('signIn')}

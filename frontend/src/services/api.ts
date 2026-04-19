@@ -45,6 +45,12 @@ export const api = {
   },
 
   profile: {
-    stats: () => request<ProfileStats>('/profile/stats'),
+    stats: (guestId?: string) =>
+      request<ProfileStats>(`/profile/stats${guestId ? `?guestId=${encodeURIComponent(guestId)}` : ''}`),
+    updateNickname: (nickname: string, guestId?: string) =>
+      request<{ username: string }>('/profile/nickname', {
+        method: 'PATCH',
+        body: JSON.stringify({ nickname, guestId }),
+      }),
   },
 }

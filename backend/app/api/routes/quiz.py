@@ -82,8 +82,9 @@ def start_quiz(db: Session = Depends(get_db)):
         "correct_count": 0,
         "wrong_count": 0,
         "streak": 0,
-        # guess IDs accumulated during the session so we can link them to a Game on finish
         "guess_ids": [],
+        # buffered for guests: flushed to DB when guestId is known at /finish
+        "pending_guesses": [],
     }
 
     return QuizSession(sessionId=session_id, questions=questions)
@@ -140,6 +141,8 @@ def answer(
         db.flush()
         session["guess_ids"].append(guess.id)
         db.commit()
+    else:
+        session["pending_guesses"].append({"peak_id": body.questionId, "is_correct": is_correct})
 
     return AnswerResult(
         correct=is_correct,
@@ -178,15 +181,37 @@ def finish_quiz(
                     {"game_id": game.id}, synchronize_session=False
                 )
         db.commit()
-    elif body.nickname and body.guestId:
+    elif body.guestId:
         guest = db.get(User, body.guestId)
         if not guest:
-            guest = User(id=body.guestId, username=body.nickname, best_score=body.score)
+            guest = User(id=body.guestId, username=body.nickname or body.guestId, best_score=body.score)
             db.add(guest)
+            db.flush()
         else:
-            guest.username = body.nickname
+            if body.nickname:
+                guest.username = body.nickname
             if body.score > guest.best_score:
                 guest.best_score = body.score
+
+        if session:
+            for pg in session.get("pending_guesses", []):
+                guess = Guess(user_id=guest.id, peak_id=pg["peak_id"], is_correct=pg["is_correct"])
+                db.add(guess)
+                db.flush()
+                session.setdefault("guess_ids", []).append(guess.id)
+
+            game = Game(
+                user_id=guest.id,
+                score=body.score,
+                correct_count=session.get("correct_count", 0),
+                wrong_count=session.get("wrong_count", 0),
+            )
+            db.add(game)
+            db.flush()
+            if session.get("guess_ids"):
+                db.query(Guess).filter(Guess.id.in_(session["guess_ids"])).update(
+                    {"game_id": game.id}, synchronize_session=False
+                )
         db.commit()
 
     rank = db.query(User).filter(User.best_score > body.score).count() + 1

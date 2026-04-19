@@ -1,13 +1,28 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import func
 from sqlalchemy.orm import Session, joinedload
 
 from ...db.database import get_db
 from ...db.models import Game, Guess, Peak, User
-from ...schemas.profile import GameOut, ProfileStats, TroublePeakOut
-from ...api.routes.auth import get_current_user
+from ...schemas.profile import GameOut, NicknameUpdate, ProfileStats, TroublePeakOut
+from ...api.routes.auth import get_optional_user
 
 router = APIRouter(prefix="/profile", tags=["profile"])
+
+
+def _resolve_user(
+    db: Session,
+    current_user: User | None,
+    guest_id: str | None,
+) -> tuple[User, bool]:
+    """Return (user, is_guest). Prefers the authenticated user; falls back to guest lookup."""
+    if current_user:
+        return current_user, False
+    if guest_id:
+        guest = db.get(User, guest_id)
+        if guest:
+            return guest, True
+    raise HTTPException(status_code=404, detail="Profile not found")
 
 
 def _image_url(peak: Peak) -> str:
@@ -22,16 +37,18 @@ def _image_url(peak: Peak) -> str:
 
 @router.get("/stats", response_model=ProfileStats)
 def get_stats(
+    guestId: str | None = None,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User | None = Depends(get_optional_user),
 ):
+    user, is_guest = _resolve_user(db, current_user, guestId)
     # Count of all guess rows for this user, regardless of outcome
-    total = db.query(func.count(Guess.id)).filter(Guess.user_id == current_user.id).scalar() or 0
+    total = db.query(func.count(Guess.id)).filter(Guess.user_id == user.id).scalar() or 0
 
     # Count of guess rows where the user answered correctly
     correct = (
         db.query(func.count(Guess.id))
-        .filter(Guess.user_id == current_user.id, Guess.is_correct.is_(True))
+        .filter(Guess.user_id == user.id, Guess.is_correct.is_(True))
         .scalar() or 0
     )
 
@@ -40,7 +57,7 @@ def get_stats(
     # the trouble-peaks join below
     wrong_subq = (
         db.query(Guess.peak_id, func.count(Guess.id).label("wrong_count"))
-        .filter(Guess.user_id == current_user.id, Guess.is_correct.is_(False))
+        .filter(Guess.user_id == user.id, Guess.is_correct.is_(False))
         .group_by(Guess.peak_id)
         .having(func.count(Guess.id) >= 2)
         .order_by(func.count(Guess.id).desc())
@@ -61,7 +78,7 @@ def get_stats(
         # Total guesses (right + wrong) for this specific peak, used to show accuracy context
         total_attempts = (
             db.query(func.count(Guess.id))
-            .filter(Guess.user_id == current_user.id, Guess.peak_id == peak.id)
+            .filter(Guess.user_id == user.id, Guess.peak_id == peak.id)
             .scalar() or 0
         )
         trouble_peaks.append(TroublePeakOut(
@@ -75,7 +92,7 @@ def get_stats(
     # Last 10 completed games for this user, newest first
     recent_game_rows = (
         db.query(Game)
-        .filter(Game.user_id == current_user.id)
+        .filter(Game.user_id == user.id)
         .order_by(Game.created_at.desc())
         .limit(10)
         .all()
@@ -92,9 +109,27 @@ def get_stats(
     ]
 
     return ProfileStats(
+        userId=user.id,
+        username=user.username,
+        isGuest=is_guest,
         totalGuesses=total,
         correctGuesses=correct,
         accuracyPercent=round(correct / total * 100, 1) if total > 0 else 0.0,
         troublePeaks=trouble_peaks,
         recentGames=recent_games,
     )
+
+
+@router.patch("/nickname")
+def update_nickname(
+    body: NicknameUpdate,
+    db: Session = Depends(get_db),
+    current_user: User | None = Depends(get_optional_user),
+):
+    user, _ = _resolve_user(db, current_user, body.guestId)
+    name = body.nickname.strip()
+    if not name:
+        raise HTTPException(status_code=400, detail="Nickname cannot be empty")
+    user.username = name
+    db.commit()
+    return {"username": user.username}

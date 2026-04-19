@@ -1,27 +1,80 @@
 import { useState, useEffect } from 'react'
+import { Pencil } from 'lucide-react'
 import { api } from '../services/api'
+import { useAuth } from '../hooks/useAuth'
 import { useTranslation } from '../hooks/useTranslation'
 import type { ProfileStats, GameEntry } from '../types'
 import styles from './ProfilePage.module.css'
 
+function getGuestId(): string | undefined {
+  return localStorage.getItem('pq_guest_id') ?? undefined
+}
+
 export function ProfilePage() {
   const [stats, setStats] = useState<ProfileStats | null>(null)
   const [loading, setLoading] = useState(true)
+  const [editing, setEditing] = useState(false)
+  const [nicknameInput, setNicknameInput] = useState('')
+  const [saving, setSaving] = useState(false)
+  const { refresh } = useAuth()
   const { t } = useTranslation()
 
   useEffect(() => {
-    api.profile.stats()
+    api.profile.stats(getGuestId())
       .then(setStats)
       .catch(() => setStats(null))
       .finally(() => setLoading(false))
   }, [])
 
+  const handleSave = async () => {
+    const name = nicknameInput.trim()
+    if (!name || !stats) return
+    setSaving(true)
+    try {
+      const guestId = stats.isGuest ? stats.userId : undefined
+      await api.profile.updateNickname(name, guestId)
+      setStats({ ...stats, username: name })
+      setEditing(false)
+      if (stats.isGuest) localStorage.setItem('pq_nickname', name)
+      else refresh()
+    } finally {
+      setSaving(false)
+    }
+  }
+
   if (loading) return <main className={styles.page}><p className={styles.loading}>{t('loadingRankings')}</p></main>
-  if (!stats) return null
+  if (!stats) return <main className={styles.page}><p className={styles.empty}>{t('profileEmptyGuest')}</p></main>
 
   return (
     <main className={styles.page}>
-      <h1 className={styles.title}>{t('profileTitle')}</h1>
+      <div className={styles.header}>
+        <h1 className={styles.title}>{t('profileTitle')}</h1>
+        {editing ? (
+          <div className={styles.nicknameEdit}>
+            <input
+              className={styles.nicknameInput}
+              value={nicknameInput}
+              onChange={e => setNicknameInput(e.target.value)}
+              maxLength={30}
+              autoFocus
+            />
+            <button className={styles.nicknameSave} onClick={handleSave} disabled={saving}>
+              {t('nicknameSave')}
+            </button>
+            <button className={styles.nicknameSkip} onClick={() => setEditing(false)}>
+              {t('nicknameSkip')}
+            </button>
+          </div>
+        ) : (
+          <button
+            className={styles.nicknameDisplay}
+            onClick={() => { setNicknameInput(stats.username); setEditing(true) }}
+          >
+            <span>{stats.username}</span>
+            <Pencil size={14} strokeWidth={1.75} />
+          </button>
+        )}
+      </div>
 
       <div className={styles.statsRow}>
         <div className={styles.statCard}>

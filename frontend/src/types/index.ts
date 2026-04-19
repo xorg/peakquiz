@@ -57,6 +57,9 @@ export interface GameEntry {
 }
 
 export interface ProfileStats {
+  userId: string
+  username: string
+  isGuest: boolean
   totalGuesses: number
   correctGuesses: number
   accuracyPercent: number

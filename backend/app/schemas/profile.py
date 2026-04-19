@@ -19,8 +19,16 @@ class GameOut(BaseModel):
 
 
 class ProfileStats(BaseModel):
+    userId: str
+    username: str
+    isGuest: bool
     totalGuesses: int
     correctGuesses: int
     accuracyPercent: float
     troublePeaks: list[TroublePeakOut]
     recentGames: list[GameOut]
+
+
+class NicknameUpdate(BaseModel):
+    nickname: str
+    guestId: str | None = None
