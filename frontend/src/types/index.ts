@@ -48,6 +48,14 @@ export interface TroublePeak {
   totalAttempts: number
 }
 
+export interface FavouritePeak {
+  peakId: number
+  peakName: string
+  imageUrl: string
+  correctCount: number
+  totalAttempts: number
+}
+
 export interface GameEntry {
   id: number
   score: number
@@ -64,6 +72,7 @@ export interface ProfileStats {
   correctGuesses: number
   accuracyPercent: number
   troublePeaks: TroublePeak[]
+  favouritePeaks: FavouritePeak[]
   recentGames: GameEntry[]
 }
 

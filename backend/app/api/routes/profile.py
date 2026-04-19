@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session, joinedload
 
 from ...db.database import get_db
 from ...db.models import Game, Guess, Peak, User
-from ...schemas.profile import GameOut, NicknameUpdate, ProfileStats, TroublePeakOut
+from ...schemas.profile import FavouritePeakOut, GameOut, NicknameUpdate, ProfileStats, TroublePeakOut
 from ...api.routes.auth import get_optional_user
 
 router = APIRouter(prefix="/profile", tags=["profile"])
@@ -89,6 +89,38 @@ def get_stats(
             totalAttempts=total_attempts,
         ))
 
+    correct_subq = (
+        db.query(Guess.peak_id, func.count(Guess.id).label("correct_count"))
+        .filter(Guess.user_id == user.id, Guess.is_correct.is_(True))
+        .group_by(Guess.peak_id)
+        .having(func.count(Guess.id) >= 2)
+        .order_by(func.count(Guess.id).desc())
+        .limit(5)
+        .subquery()
+    )
+
+    favourite_rows = (
+        db.query(Peak, correct_subq.c.correct_count)
+        .join(correct_subq, Peak.id == correct_subq.c.peak_id)
+        .options(joinedload(Peak.pictures))
+        .all()
+    )
+
+    favourite_peaks = []
+    for peak, correct_count in favourite_rows:
+        total_attempts = (
+            db.query(func.count(Guess.id))
+            .filter(Guess.user_id == user.id, Guess.peak_id == peak.id)
+            .scalar() or 0
+        )
+        favourite_peaks.append(FavouritePeakOut(
+            peakId=peak.id,
+            peakName=peak.name,
+            imageUrl=_image_url(peak),
+            correctCount=correct_count,
+            totalAttempts=total_attempts,
+        ))
+
     # Last 10 completed games for this user, newest first
     recent_game_rows = (
         db.query(Game)
@@ -116,6 +148,7 @@ def get_stats(
         correctGuesses=correct,
         accuracyPercent=round(correct / total * 100, 1) if total > 0 else 0.0,
         troublePeaks=trouble_peaks,
+        favouritePeaks=favourite_peaks,
         recentGames=recent_games,
     )
 

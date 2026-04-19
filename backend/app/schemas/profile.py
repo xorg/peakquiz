@@ -10,6 +10,14 @@ class TroublePeakOut(BaseModel):
     totalAttempts: int
 
 
+class FavouritePeakOut(BaseModel):
+    peakId: int
+    peakName: str
+    imageUrl: str
+    correctCount: int
+    totalAttempts: int
+
+
 class GameOut(BaseModel):
     id: int
     score: int
@@ -26,6 +34,7 @@ class ProfileStats(BaseModel):
     correctGuesses: int
     accuracyPercent: float
     troublePeaks: list[TroublePeakOut]
+    favouritePeaks: list[FavouritePeakOut]
     recentGames: list[GameOut]
 
 
