@@ -26,14 +26,17 @@ def _streak_multiplier(streak: int) -> int:
 _sessions: dict[str, dict] = {}
 
 
-def _best_image(peak: Peak) -> str | None:
-    for pic in peak.pictures:
-        if pic.cdn_url:
-            # Inject resize transform before the public ID; w_800,c_limit caps delivery width without upscaling
-            return pic.cdn_url.replace("/upload/", "/upload/w_800,c_limit/", 1)
-    for pic in peak.pictures:
-        if pic.original_url:
-            return pic.original_url
+def _select_image(peak: Peak) -> str | None:
+    """Pick a random CDN image for the peak so each quiz session may show a different photo.
+    Falls back to any original_url if no CDN images exist, and returns None if the peak
+    has no pictures at all."""
+    cdn = [p for p in peak.pictures if p.cdn_url]
+    if cdn:
+        pic = random.choice(cdn)
+        return pic.cdn_url.replace("/upload/", "/upload/w_800,c_limit/", 1)
+    originals = [p for p in peak.pictures if p.original_url]
+    if originals:
+        return random.choice(originals).original_url
     return None
 
 
@@ -46,7 +49,7 @@ def _make_question(peak: Peak, all_peaks: list[Peak]) -> QuizQuestion:
         peak=PeakOut(
             id=peak.id,
             name=peak.name,
-            imageUrl=_best_image(peak) or "",
+            imageUrl=_select_image(peak) or "",
             heightM=peak.elevation or 0,
             country=peak.region or "",
         ),
