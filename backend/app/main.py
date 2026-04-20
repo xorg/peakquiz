@@ -2,9 +2,9 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.middleware.sessions import SessionMiddleware
 
+from .api.routes import auth, profile, quiz, rankings
 from .core.config import settings
 from .db.database import Base, engine
-from .api.routes import auth, profile, quiz, rankings
 
 Base.metadata.create_all(bind=engine)
 

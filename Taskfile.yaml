@@ -30,9 +30,24 @@ tasks:
     deps: [backend:install, frontend:install]
 
   backend:lint:
-    desc: Type-check backend with mypy
+    desc: Lint backend with ruff
     dir: backend
-    cmd: uv run mypy app/
+    cmd: uv run ruff check app/ tests/
+
+  backend:lint:fix:
+    desc: Lint backend and auto-fix safe issues
+    dir: backend
+    cmd: uv run ruff check --fix app/ tests/
+
+  backend:typecheck:
+    desc: Type-check backend with pyright
+    dir: backend
+    cmd: uv run pyright app/
+
+  backend:check:
+    desc: Run all backend checks (lint + typecheck)
+    dir: backend
+    deps: [backend:lint, backend:typecheck]
 
   frontend:build:
     desc: Build frontend for production

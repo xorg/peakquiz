@@ -1,12 +1,20 @@
 import random
 import uuid
+
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session, joinedload
 
+from ...api.routes.auth import get_optional_user
 from ...db.database import get_db
 from ...db.models import Game, Guess, Peak, Picture, User
-from ...schemas.quiz import AnswerRequest, AnswerResult, FinishRequest, QuizSession, QuizQuestion, PeakOut
-from ...api.routes.auth import get_optional_user
+from ...schemas.quiz import (
+    AnswerRequest,
+    AnswerResult,
+    FinishRequest,
+    PeakOut,
+    QuizQuestion,
+    QuizSession,
+)
 
 router = APIRouter(prefix="/quiz", tags=["quiz"])
 
@@ -30,13 +38,12 @@ def _select_image(peak: Peak) -> str | None:
     """Pick a random CDN image for the peak so each quiz session may show a different photo.
     Falls back to any original_url if no CDN images exist, and returns None if the peak
     has no pictures at all."""
-    cdn = [p for p in peak.pictures if p.cdn_url]
-    if cdn:
-        pic = random.choice(cdn)
-        return pic.cdn_url.replace("/upload/", "/upload/w_800,c_limit/", 1)
-    originals = [p for p in peak.pictures if p.original_url]
-    if originals:
-        return random.choice(originals).original_url
+    cdn_urls = [p.cdn_url for p in peak.pictures if p.cdn_url]
+    if cdn_urls:
+        return random.choice(cdn_urls).replace("/upload/", "/upload/w_800,c_limit/", 1)
+    original_urls = [p.original_url for p in peak.pictures if p.original_url]
+    if original_urls:
+        return random.choice(original_urls)
     return None
 
 

@@ -1,8 +1,7 @@
+from authlib.integrations.starlette_client import OAuth
 from fastapi import APIRouter, Depends, HTTPException, Request, Response
 from fastapi.responses import RedirectResponse
 from sqlalchemy.orm import Session
-from authlib.integrations.starlette_client import OAuth
-
 
 from ...core.config import settings
 from ...core.security import create_access_token, decode_access_token

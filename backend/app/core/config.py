@@ -1,4 +1,5 @@
 from pathlib import Path
+
 from pydantic_settings import BaseSettings
 
 # Absolute path so the .env is found regardless of working directory (e.g. WSGI servers)

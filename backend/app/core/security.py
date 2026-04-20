@@ -1,5 +1,7 @@
-from datetime import datetime, timedelta, timezone
-from jose import jwt, JWTError
+from datetime import UTC, datetime, timedelta
+
+from jose import JWTError, jwt
+
 from .config import settings
 
 ALGORITHM = "HS256"
@@ -7,7 +9,7 @@ TOKEN_EXPIRE_DAYS = 30
 
 
 def create_access_token(user_id: str) -> str:
-    expire = datetime.now(timezone.utc) + timedelta(days=TOKEN_EXPIRE_DAYS)
+    expire = datetime.now(UTC) + timedelta(days=TOKEN_EXPIRE_DAYS)
     return jwt.encode({"sub": user_id, "exp": expire}, settings.secret_key, algorithm=ALGORITHM)
 
 

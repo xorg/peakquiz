@@ -2,10 +2,16 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import func
 from sqlalchemy.orm import Session, joinedload
 
+from ...api.routes.auth import get_optional_user
 from ...db.database import get_db
 from ...db.models import Game, Guess, Peak, User
-from ...schemas.profile import FavouritePeakOut, GameOut, NicknameUpdate, ProfileStats, TroublePeakOut
-from ...api.routes.auth import get_optional_user
+from ...schemas.profile import (
+    FavouritePeakOut,
+    GameOut,
+    NicknameUpdate,
+    ProfileStats,
+    TroublePeakOut,
+)
 
 router = APIRouter(prefix="/profile", tags=["profile"])
 

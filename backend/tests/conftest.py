@@ -4,10 +4,10 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 
-from app.main import app
+from app.api.routes.auth import get_current_user, get_optional_user
 from app.db.database import Base, get_db
 from app.db.models import Guess, Peak, Picture, User  # noqa: F401 — registers all models
-from app.api.routes.auth import get_current_user, get_optional_user
+from app.main import app
 
 
 @pytest.fixture
