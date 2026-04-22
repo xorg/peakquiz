@@ -9,6 +9,20 @@ from .db.database import Base, engine
 
 Base.metadata.create_all(bind=engine)
 
+# Lightweight migrations for additive schema changes
+_MIGRATIONS = [
+    "ALTER TABLE games ADD COLUMN category TEXT",
+    "ALTER TABLE pictures ADD COLUMN author_id INTEGER REFERENCES authors(id)",
+    "ALTER TABLE pictures ADD COLUMN license_id INTEGER REFERENCES licenses(id)",
+]
+with engine.connect() as _conn:
+    for _sql in _MIGRATIONS:
+        try:
+            _conn.execute(text(_sql))
+            _conn.commit()
+        except Exception:
+            pass  # Column already exists
+
 app = FastAPI(title="Peakquiz API", version="0.1.0")
 
 app.add_middleware(

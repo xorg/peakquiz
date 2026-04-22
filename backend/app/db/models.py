@@ -68,16 +68,40 @@ class Peak(Base):
     pictures: Mapped[list["Picture"]] = relationship("Picture", back_populates="peak")
 
 
+class Author(Base):
+    __tablename__ = "authors"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    name: Mapped[str] = mapped_column(String(255), nullable=False)
+    url: Mapped[str | None] = mapped_column(String(500), nullable=True)
+
+    pictures: Mapped[list["Picture"]] = relationship("Picture", back_populates="author_rel")
+
+
+class License(Base):
+    __tablename__ = "licenses"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    name: Mapped[str] = mapped_column(String(100), nullable=False, unique=True)
+    url: Mapped[str | None] = mapped_column(String(500), nullable=True)
+
+    pictures: Mapped[list["Picture"]] = relationship("Picture", back_populates="license_rel")
+
+
 class Picture(Base):
     __tablename__ = "pictures"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     peak_id: Mapped[int] = mapped_column(Integer, ForeignKey("peaks.id"), nullable=False)
     original_url: Mapped[str] = mapped_column(String(200), nullable=False, unique=True)
-    author: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    author: Mapped[str | None] = mapped_column(String(255), nullable=True)  # legacy plain-text field
     cdn_url: Mapped[str | None] = mapped_column(String(200), nullable=True, unique=True)
     source: Mapped[str | None] = mapped_column(String(255), nullable=True)
     title: Mapped[str | None] = mapped_column(String(255), nullable=True)
     cdn_asset_id: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    author_id: Mapped[int | None] = mapped_column(Integer, ForeignKey("authors.id"), nullable=True)
+    license_id: Mapped[int | None] = mapped_column(Integer, ForeignKey("licenses.id"), nullable=True)
 
     peak: Mapped["Peak"] = relationship("Peak", back_populates="pictures")
+    author_rel: Mapped["Author | None"] = relationship("Author", back_populates="pictures")
+    license_rel: Mapped["License | None"] = relationship("License", back_populates="pictures")
