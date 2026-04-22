@@ -1,4 +1,4 @@
-import type { QuizSession, QuizQuestion, AnswerResult, RankingEntry, User, ProfileStats } from '../types'
+import type { QuizSession, QuizQuestion, AnswerResult, RankingEntry, User, ProfileStats, Category } from '../types'
 
 const BASE_URL = import.meta.env.VITE_BACKEND_HOST
   ? `https://${import.meta.env.VITE_BACKEND_HOST}/api`
@@ -25,7 +25,12 @@ export const api = {
   },
 
   quiz: {
-    start: () => request<QuizSession>('/quiz/start', { method: 'POST' }),
+    categories: () => request<Category[]>('/quiz/categories'),
+    start: (category?: string) =>
+      request<QuizSession>('/quiz/start', {
+        method: 'POST',
+        body: JSON.stringify({ category: category ?? null }),
+      }),
     answer: (sessionId: string, questionId: number, answer: string) =>
       request<AnswerResult>('/quiz/answer', {
         method: 'POST',
@@ -42,6 +47,8 @@ export const api = {
 
   rankings: {
     global: (limit = 50) => request<RankingEntry[]>(`/rankings?limit=${limit}`),
+    byCategory: (category: string, limit = 50) =>
+      request<RankingEntry[]>(`/rankings/category/${encodeURIComponent(category)}?limit=${limit}`),
   },
 
   profile: {

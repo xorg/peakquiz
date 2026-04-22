@@ -6,25 +6,45 @@ import { LeaderboardTable } from '../components/LeaderboardTable'
 import type { RankingEntry, AnswerRecord } from '../types'
 import styles from './LeaderboardPage.module.css'
 
+const CATEGORY_ALL = 'all'
+
 interface Props {
   finalScore?: number
   onPlayAgain?: () => void
   onPlay?: () => void
   answerHistory?: AnswerRecord[]
+  activeCategory?: string
 }
 
-export function LeaderboardPage({ finalScore, onPlayAgain, onPlay, answerHistory }: Props) {
+export function LeaderboardPage({ finalScore, onPlayAgain, onPlay, answerHistory, activeCategory }: Props) {
   const [breakdownOpen, setBreakdownOpen] = useState(false)
   const [entries, setEntries] = useState<RankingEntry[]>([])
   const [loading, setLoading] = useState(true)
+  const [selectedTab, setSelectedTab] = useState<string>(activeCategory ?? CATEGORY_ALL)
+  const [tabs, setTabs] = useState<{ id: string; label: string }[]>([])
   const { t } = useTranslation()
 
+  // Fetch category list once to build tabs
   useEffect(() => {
-    api.rankings.global()
+    api.quiz.categories()
+      .then(cats => {
+        setTabs(cats.map(c => ({ id: c.id, label: c.name })))
+      })
+      .catch(() => {
+        setTabs([{ id: CATEGORY_ALL, label: t('categoryAllPeaks') }])
+      })
+  }, [])
+
+  useEffect(() => {
+    setLoading(true)
+    const fetch = selectedTab === CATEGORY_ALL
+      ? api.rankings.global()
+      : api.rankings.byCategory(selectedTab)
+    fetch
       .then(setEntries)
       .catch(() => setEntries([]))
       .finally(() => setLoading(false))
-  }, [])
+  }, [selectedTab])
 
   return (
     <main className={styles.page}>
@@ -79,6 +99,21 @@ export function LeaderboardPage({ finalScore, onPlayAgain, onPlay, answerHistory
 
       <section className={styles.leaderboard}>
         <h2 className={styles.sectionTitle}>{t('globalRankings')}</h2>
+
+        {tabs.length > 1 && (
+          <div className={styles.tabs}>
+            {tabs.map(tab => (
+              <button
+                key={tab.id}
+                className={`${styles.tab} ${selectedTab === tab.id ? styles.tabActive : ''}`}
+                onClick={() => setSelectedTab(tab.id)}
+              >
+                {tab.id === CATEGORY_ALL ? t('rankingsTabAll') : tab.label}
+              </button>
+            ))}
+          </div>
+        )}
+
         {loading ? (
           <p className={styles.loading}>{t('loadingRankings')}</p>
         ) : (

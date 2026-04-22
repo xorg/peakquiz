@@ -10,25 +10,30 @@ from ...db.models import Game, Guess, Peak, Picture, User
 from ...schemas.quiz import (
     AnswerRequest,
     AnswerResult,
+    CategoryResponse,
     FinishRequest,
     PeakOut,
     QuizQuestion,
     QuizSession,
+    StartRequest,
 )
 
 router = APIRouter(prefix="/quiz", tags=["quiz"])
 
 POINTS_PER_CORRECT = 100
 INITIAL_BATCH = 10
-# Streak: kicks in from the 3rd consecutive correct; multiplier grows with streak length, capped.
 STREAK_THRESHOLD = 3
 STREAK_MAX_MULTIPLIER = 4
+
+CATEGORY_ALL = "all"
+CATEGORY_ALL_NAME = "Schweizer Berge"
 
 
 def _streak_multiplier(streak: int) -> int:
     if streak < STREAK_THRESHOLD:
         return 1
     return min(streak - 1, STREAK_MAX_MULTIPLIER)
+
 
 # In-memory session store (replace with Redis for production)
 _sessions: dict[str, dict] = {}
@@ -47,8 +52,8 @@ def _select_image(peak: Peak) -> str | None:
     return None
 
 
-def _make_question(peak: Peak, all_peaks: list[Peak]) -> QuizQuestion:
-    distractors = random.sample([p for p in all_peaks if p.id != peak.id], 3)
+def _make_question(peak: Peak, distractor_pool: list[Peak]) -> QuizQuestion:
+    distractors = random.sample([p for p in distractor_pool if p.id != peak.id], 3)
     options = [peak.name] + [d.name for d in distractors]
     random.shuffle(options)
     return QuizQuestion(
@@ -64,23 +69,63 @@ def _make_question(peak: Peak, all_peaks: list[Peak]) -> QuizQuestion:
     )
 
 
-def _eligible_peaks(db: Session) -> list[Peak]:
-    return (
+def _eligible_peaks(db: Session, region: str | None = None) -> list[Peak]:
+    q = (
         db.query(Peak)
         .join(Picture)
         .filter(Picture.cdn_url.isnot(None))
         .options(joinedload(Peak.pictures))
         .distinct()
-        .all()
     )
+    if region:
+        q = q.filter(Peak.region == region)
+    return q.all()
+
+
+@router.get("/categories", response_model=list[CategoryResponse])
+def get_categories(db: Session = Depends(get_db)):
+    all_peaks = _eligible_peaks(db)
+
+    # Overall "Schweizer Berge" category — highest peak overall
+    overall_peak = max(all_peaks, key=lambda p: p.elevation or 0) if all_peaks else None
+    categories: list[CategoryResponse] = [
+        CategoryResponse(
+            id=CATEGORY_ALL,
+            name=CATEGORY_ALL_NAME,
+            peakCount=len(all_peaks),
+            imageUrl=(_select_image(overall_peak) or "") if overall_peak else "",
+        )
+    ]
+
+    # One entry per region
+    regions: dict[str, list[Peak]] = {}
+    for peak in all_peaks:
+        if peak.region:
+            regions.setdefault(peak.region, []).append(peak)
+
+    for region, peaks in sorted(regions.items()):
+        highest = max(peaks, key=lambda p: p.elevation or 0)
+        categories.append(
+            CategoryResponse(
+                id=region,
+                name=region,
+                peakCount=len(peaks),
+                imageUrl=_select_image(highest) or "",
+            )
+        )
+
+    return categories
 
 
 @router.post("/start", response_model=QuizSession)
-def start_quiz(db: Session = Depends(get_db)):
-    peaks = _eligible_peaks(db)
+def start_quiz(body: StartRequest = StartRequest(), db: Session = Depends(get_db)):
+    region = None if (body.category is None or body.category == CATEGORY_ALL) else body.category
+
+    peaks = _eligible_peaks(db, region)
     if len(peaks) < 4:
         raise HTTPException(status_code=503, detail="Not enough peaks in database")
 
+    # Distractors come from the same regional pool
     selected = random.sample(peaks, min(INITIAL_BATCH, len(peaks)))
     questions = [_make_question(p, peaks) for p in selected]
 
@@ -93,8 +138,9 @@ def start_quiz(db: Session = Depends(get_db)):
         "wrong_count": 0,
         "streak": 0,
         "guess_ids": [],
-        # buffered for guests: flushed to DB when guestId is known at /finish
         "pending_guesses": [],
+        "category": body.category or CATEGORY_ALL,
+        "region": region,
     }
 
     return QuizSession(sessionId=session_id, questions=questions)
@@ -106,7 +152,8 @@ def next_question(session_id: str, db: Session = Depends(get_db)):
     if not session:
         raise HTTPException(status_code=404, detail="Session not found")
 
-    peaks = _eligible_peaks(db)
+    region = session.get("region")
+    peaks = _eligible_peaks(db, region)
     unseen = [p for p in peaks if p.id not in session["seen_ids"]]
     if not unseen:
         raise HTTPException(status_code=404, detail="No more peaks available")
@@ -170,6 +217,7 @@ def finish_quiz(
     current_user: User | None = Depends(get_optional_user),
 ):
     session = _sessions.pop(body.sessionId, None)
+    category = session.get("category", CATEGORY_ALL) if session else CATEGORY_ALL
 
     if current_user:
         if body.nickname:
@@ -183,6 +231,7 @@ def finish_quiz(
                 score=body.score,
                 correct_count=session.get("correct_count", 0),
                 wrong_count=session.get("wrong_count", 0),
+                category=category,
             )
             db.add(game)
             db.flush()
@@ -215,6 +264,7 @@ def finish_quiz(
                 score=body.score,
                 correct_count=session.get("correct_count", 0),
                 wrong_count=session.get("wrong_count", 0),
+                category=category,
             )
             db.add(game)
             db.flush()

@@ -17,10 +17,20 @@ export const translations = {
     signIn: 'Sign in with Google',
     signOut: 'Sign out',
 
+    // Category picker
+    categoryTitle: 'Choose your challenge',
+    categorySubtitle: 'Select a region or test yourself on all Swiss peaks',
+    categoryStartBtn: 'Start Climb',
+    categoryAllPeaks: 'Schweizer Berge',
+    categoryPeaks: 'peaks',
+
     // Quiz — idle
     quizIdleTitle: 'Ready to climb?',
     quizIdleDesc: "You'll have 60 seconds to identify as many mountain peaks as possible.",
     quizStart: 'Begin Ascent',
+
+    // Rankings tabs
+    rankingsTabAll: 'All peaks',
 
     // Quiz — active
     quizQuestion: 'WHICH PEAK IS THIS?',
@@ -75,10 +85,20 @@ export const translations = {
     signIn: 'Mit Google anmelden',
     signOut: 'Abmelden',
 
+    // Category picker
+    categoryTitle: 'Wähle deine Herausforderung',
+    categorySubtitle: 'Wähle eine Region oder teste dich an allen Schweizer Gipfeln',
+    categoryStartBtn: 'Aufstieg starten',
+    categoryAllPeaks: 'Schweizer Berge',
+    categoryPeaks: 'Gipfel',
+
     // Quiz — idle
     quizIdleTitle: 'Bereit?',
     quizIdleDesc: 'Du hast 60 Sekunden, um so viele Berggipfel wie möglich zu identifizieren.',
     quizStart: 'Aufstieg beginnen',
+
+    // Rankings tabs
+    rankingsTabAll: 'Alle Gipfel',
 
     // Quiz — active
     quizQuestion: 'WELCHER GIPFEL IST DAS?',

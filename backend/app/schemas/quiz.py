@@ -9,6 +9,17 @@ class PeakOut(BaseModel):
     country: str
 
 
+class CategoryResponse(BaseModel):
+    id: str
+    name: str
+    peakCount: int
+    imageUrl: str
+
+
+class StartRequest(BaseModel):
+    category: str | None = None
+
+
 class QuizQuestion(BaseModel):
     id: int
     peak: PeakOut

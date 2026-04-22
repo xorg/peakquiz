@@ -91,7 +91,7 @@ export function useQuiz() {
     }
   }, [finishQuiz])
 
-  const startQuiz = async () => {
+  const startQuiz = async (category?: string) => {
     stopTimer()
     setScore(0)
     scoreRef.current = 0
@@ -107,7 +107,7 @@ export function useQuiz() {
     setMultiplier(1)
     setTimeLeft(QUIZ_DURATION_SECONDS)
 
-    const newSession = await api.quiz.start()
+    const newSession = await api.quiz.start(category)
     sessionIdRef.current = newSession.sessionId
     setQuestions(newSession.questions)
     questionsRef.current = newSession.questions

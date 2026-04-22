@@ -81,6 +81,13 @@ export interface AnswerRecord {
   wasCorrect: boolean
 }
 
+export interface Category {
+  id: string
+  name: string
+  peakCount: number
+  imageUrl: string
+}
+
 export type QuizState = 'idle' | 'active' | 'nickname' | 'finished'
 
 export type AnswerState = 'unanswered' | 'correct' | 'wrong'

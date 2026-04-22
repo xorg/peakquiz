@@ -11,7 +11,12 @@ import styles from './QuizPage.module.css'
 const LABELS = ['A', 'B', 'C', 'D']
 const QUIZ_DURATION = 60
 
-export function QuizPage() {
+interface Props {
+  category?: string
+  onPlayAgain: () => void
+}
+
+export function QuizPage({ category, onPlayAgain }: Props) {
   const {
     quizState,
     currentQuestion,
@@ -37,13 +42,24 @@ export function QuizPage() {
   const [nickname, setNickname] = useState(() => localStorage.getItem('pq_nickname') ?? '')
 
   useEffect(() => {
+    startQuiz(category)
+  }, [])
+
+  useEffect(() => {
     if (user && !nickname) {
       setNickname(user.username)
     }
   }, [user])
 
   if (quizState === 'finished') {
-    return <LeaderboardPage finalScore={score} onPlayAgain={startQuiz} answerHistory={answerHistory} />
+    return (
+      <LeaderboardPage
+        finalScore={score}
+        onPlayAgain={onPlayAgain}
+        answerHistory={answerHistory}
+        activeCategory={category}
+      />
+    )
   }
 
   if (quizState === 'nickname') {
@@ -82,19 +98,7 @@ export function QuizPage() {
     )
   }
 
-  if (quizState === 'idle') {
-    return (
-      <main className={styles.idle}>
-        <h2 className={styles.idleTitle}>{t('quizIdleTitle')}</h2>
-        <p className={styles.idleDesc}>{t('quizIdleDesc')}</p>
-        <button className={styles.startBtn} onClick={startQuiz}>
-          {t('quizStart')}
-        </button>
-      </main>
-    )
-  }
-
-  if (!currentQuestion) return null
+  if (quizState === 'idle' || !currentQuestion) return null
 
   return (
     <main className={styles.page}>

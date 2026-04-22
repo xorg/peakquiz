@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from sqlalchemy import text
 from starlette.middleware.sessions import SessionMiddleware
 
 from .api.routes import auth, profile, quiz, rankings
