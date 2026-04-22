@@ -4,6 +4,10 @@ export interface Peak {
   imageUrl: string
   heightM: number
   country: string
+  authorName?: string
+  authorUrl?: string
+  licenseName?: string
+  licenseUrl?: string
 }
 
 export interface QuizQuestion {

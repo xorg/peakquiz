@@ -39,31 +39,35 @@ def _streak_multiplier(streak: int) -> int:
 _sessions: dict[str, dict] = {}
 
 
-def _select_image(peak: Peak) -> str | None:
-    """Pick a random CDN image for the peak so each quiz session may show a different photo.
-    Falls back to any original_url if no CDN images exist, and returns None if the peak
-    has no pictures at all."""
-    cdn_urls = [p.cdn_url for p in peak.pictures if p.cdn_url]
-    if cdn_urls:
-        return random.choice(cdn_urls).replace("/upload/", "/upload/w_800,c_limit/", 1)
-    original_urls = [p.original_url for p in peak.pictures if p.original_url]
-    if original_urls:
-        return random.choice(original_urls)
-    return None
+def _select_picture(peak: Peak) -> Picture | None:
+    """Pick a random picture for the peak, preferring CDN images."""
+    cdn_pics = [p for p in peak.pictures if p.cdn_url]
+    if cdn_pics:
+        return random.choice(cdn_pics)
+    any_pics = [p for p in peak.pictures if p.original_url]
+    return random.choice(any_pics) if any_pics else None
 
 
 def _make_question(peak: Peak, distractor_pool: list[Peak]) -> QuizQuestion:
     distractors = random.sample([p for p in distractor_pool if p.id != peak.id], 3)
     options = [peak.name] + [d.name for d in distractors]
     random.shuffle(options)
+    pic = _select_picture(peak)
+    image_url = ""
+    if pic:
+        image_url = (pic.cdn_url or "").replace("/upload/", "/upload/w_800,c_limit/", 1) or pic.original_url or ""
     return QuizQuestion(
         id=peak.id,
         peak=PeakOut(
             id=peak.id,
             name=peak.name,
-            imageUrl=_select_image(peak) or "",
+            imageUrl=image_url,
             heightM=peak.elevation or 0,
             country=peak.region or "",
+            authorName=pic.author_rel.name if pic and pic.author_rel else None,
+            authorUrl=pic.author_rel.url if pic and pic.author_rel else None,
+            licenseName=pic.license_rel.name if pic and pic.license_rel else None,
+            licenseUrl=pic.license_rel.url if pic and pic.license_rel else None,
         ),
         options=options,
     )
@@ -74,7 +78,10 @@ def _eligible_peaks(db: Session, region: str | None = None) -> list[Peak]:
         db.query(Peak)
         .join(Picture)
         .filter(Picture.cdn_url.isnot(None))
-        .options(joinedload(Peak.pictures))
+        .options(
+            joinedload(Peak.pictures).joinedload(Picture.author_rel),
+            joinedload(Peak.pictures).joinedload(Picture.license_rel),
+        )
         .distinct()
     )
     if region:
@@ -88,12 +95,13 @@ def get_categories(db: Session = Depends(get_db)):
 
     # Overall "Schweizer Berge" category — highest peak overall
     overall_peak = max(all_peaks, key=lambda p: p.elevation or 0) if all_peaks else None
+    overall_pic = _select_picture(overall_peak) if overall_peak else None
     categories: list[CategoryResponse] = [
         CategoryResponse(
             id=CATEGORY_ALL,
             name=CATEGORY_ALL_NAME,
             peakCount=len(all_peaks),
-            imageUrl=(_select_image(overall_peak) or "") if overall_peak else "",
+            imageUrl=(overall_pic.cdn_url or "") if overall_pic else "",
         )
     ]
 
@@ -105,12 +113,13 @@ def get_categories(db: Session = Depends(get_db)):
 
     for region, peaks in sorted(regions.items()):
         highest = max(peaks, key=lambda p: p.elevation or 0)
+        highest_pic = _select_picture(highest)
         categories.append(
             CategoryResponse(
                 id=region,
                 name=region,
                 peakCount=len(peaks),
-                imageUrl=_select_image(highest) or "",
+                imageUrl=(highest_pic.cdn_url or "") if highest_pic else "",
             )
         )
 

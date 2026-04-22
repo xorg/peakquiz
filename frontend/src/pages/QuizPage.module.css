@@ -213,6 +213,30 @@
   color: var(--color-primary-fixed);
 }
 
+.attribution {
+  position: absolute;
+  bottom: var(--space-2);
+  right: var(--space-2);
+  padding: 2px 7px;
+  background: rgba(0, 0, 0, 0.35);
+  border-radius: var(--radius-full);
+  font-family: var(--font-body);
+  font-size: 10px;
+  color: rgba(255, 255, 255, 0.75);
+  line-height: 1.6;
+  backdrop-filter: blur(2px);
+}
+
+.attribution a {
+  color: rgba(255, 255, 255, 0.75);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.attribution a:hover {
+  color: #fff;
+}
+
 .options {
   display: flex;
   flex-direction: column;

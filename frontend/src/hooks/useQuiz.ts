@@ -34,6 +34,8 @@ export function useQuiz() {
 
   // Refs so timer and async callbacks always see current values
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const finishTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const isEndingRef = useRef(false)
   const sessionIdRef = useRef<string | null>(null)
   const scoreRef = useRef(0)
   const questionsRef = useRef<QuizQuestion[]>([])
@@ -53,6 +55,12 @@ export function useQuiz() {
   }, [])
 
   const finishQuiz = useCallback(() => {
+    if (isEndingRef.current) return
+    isEndingRef.current = true
+    if (finishTimeoutRef.current) {
+      clearTimeout(finishTimeoutRef.current)
+      finishTimeoutRef.current = null
+    }
     stopTimer()
     setQuizState('nickname')
   }, [stopTimer])
@@ -93,6 +101,7 @@ export function useQuiz() {
 
   const startQuiz = async (category?: string) => {
     stopTimer()
+    isEndingRef.current = false
     setScore(0)
     scoreRef.current = 0
     setCurrentIndex(0)
@@ -150,7 +159,7 @@ export function useQuiz() {
       const nextWrong = wrongCount + 1
       setWrongCount(nextWrong)
       if (nextWrong >= MAX_WRONG_ANSWERS) {
-        setTimeout(() => finishQuiz(), 900)
+        finishTimeoutRef.current = setTimeout(() => finishQuiz(), 900)
       } else {
         setTimeout(() => advance(), 900)
       }

@@ -140,6 +140,21 @@ export function QuizPage({ category, onPlayAgain }: Props) {
           <div className={styles.imageOverlay}>
             <p className={styles.question}>{t('quizQuestion')}</p>
           </div>
+          {(currentQuestion.peak.authorName || currentQuestion.peak.licenseName) && (
+            <div className={styles.attribution}>
+              {currentQuestion.peak.authorName && (
+                currentQuestion.peak.authorUrl
+                  ? <a href={currentQuestion.peak.authorUrl} target="_blank" rel="noopener noreferrer">{currentQuestion.peak.authorName}</a>
+                  : <span>{currentQuestion.peak.authorName}</span>
+              )}
+              {currentQuestion.peak.authorName && currentQuestion.peak.licenseName && <span> · </span>}
+              {currentQuestion.peak.licenseName && (
+                currentQuestion.peak.licenseUrl
+                  ? <a href={currentQuestion.peak.licenseUrl} target="_blank" rel="noopener noreferrer">{currentQuestion.peak.licenseName}</a>
+                  : <span>{currentQuestion.peak.licenseName}</span>
+              )}
+            </div>
+          )}
         </div>
 
         <div className={styles.options}>

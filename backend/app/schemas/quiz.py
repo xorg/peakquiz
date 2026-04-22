@@ -7,6 +7,10 @@ class PeakOut(BaseModel):
     imageUrl: str
     heightM: int
     country: str
+    authorName: str | None = None
+    authorUrl: str | None = None
+    licenseName: str | None = None
+    licenseUrl: str | None = None
 
 
 class CategoryResponse(BaseModel):
