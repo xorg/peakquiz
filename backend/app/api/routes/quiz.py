@@ -60,7 +60,8 @@ def _make_question(peak: Peak, distractor_pool: list[Peak]) -> QuizQuestion:
     pic = _select_picture(peak)
     image_url = ""
     if pic:
-        image_url = (pic.cdn_url or "").replace("/upload/", "/upload/w_800,c_limit/", 1) or pic.original_url or ""
+        cdn = (pic.cdn_url or "").replace("/upload/", "/upload/w_800,c_limit,f_auto,q_auto/", 1)
+        image_url = cdn or pic.original_url or ""
     return QuizQuestion(
         id=peak.id,
         peak=PeakOut(

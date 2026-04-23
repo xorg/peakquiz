@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { api } from '../services/api'
 import { useTranslation } from '../hooks/useTranslation'
+import { cdnUrl } from '../utils/cloudinary'
 import type { Category } from '../types'
 import styles from './CategoryPage.module.css'
 
@@ -49,7 +50,7 @@ export function CategoryPage({ onStart }: Props) {
               className={`${styles.featured} ${selected === CATEGORY_ALL ? styles.selectedFeatured : ''}`}
               onClick={() => setSelected(CATEGORY_ALL)}
             >
-              <img src={featured.imageUrl} alt={featured.name} className={styles.featuredImg} />
+              <img src={cdnUrl(featured.imageUrl, 600)} alt={featured.name} className={styles.featuredImg} />
               <div className={styles.featuredOverlay} />
               <div className={styles.featuredContent}>
                 <span className={styles.featuredEyebrow}>{t('categoryAllPeaks')}</span>
@@ -66,7 +67,7 @@ export function CategoryPage({ onStart }: Props) {
                 className={`${styles.card} ${selected === cat.id ? styles.selectedCard : ''}`}
                 onClick={() => setSelected(cat.id)}
               >
-                <img src={cat.imageUrl} alt={cat.name} className={styles.cardImg} />
+                <img src={cdnUrl(cat.imageUrl, 400)} alt={cat.name} className={styles.cardImg} />
                 <div className={styles.cardOverlay} />
                 <div className={styles.cardContent}>
                   <span className={styles.cardName}>{cat.name}</span>
