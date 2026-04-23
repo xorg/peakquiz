@@ -1,0 +1,19 @@
+.footer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  padding: var(--space-4) var(--space-6);
+  font-family: var(--font-label);
+  font-size: var(--text-label-sm, 11px);
+  color: var(--color-on-surface-variant);
+  margin-top: auto;
+}
+
+.sep {
+  opacity: 0.4;
+}
+
+.footer a:hover {
+  text-decoration: underline;
+}
