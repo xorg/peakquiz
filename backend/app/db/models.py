@@ -11,7 +11,9 @@ class User(Base):
 
     id: Mapped[str] = mapped_column(String, primary_key=True)  # Google sub
     username: Mapped[str] = mapped_column(String, nullable=False)
+    email: Mapped[str | None] = mapped_column(String(255), nullable=True)
     best_score: Mapped[int] = mapped_column(Integer, default=0)
+    is_admin: Mapped[bool] = mapped_column(Boolean, default=False)
     created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
 
     guesses: Mapped[list["Guess"]] = relationship("Guess", back_populates="user")

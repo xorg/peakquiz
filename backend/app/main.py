@@ -14,6 +14,8 @@ _MIGRATIONS = [
     "ALTER TABLE games ADD COLUMN category TEXT",
     "ALTER TABLE pictures ADD COLUMN author_id INTEGER REFERENCES authors(id)",
     "ALTER TABLE pictures ADD COLUMN license_id INTEGER REFERENCES licenses(id)",
+    "ALTER TABLE users ADD COLUMN email TEXT",
+    "ALTER TABLE users ADD COLUMN is_admin INTEGER NOT NULL DEFAULT 0",
 ]
 with engine.connect() as _conn:
     for _sql in _MIGRATIONS:

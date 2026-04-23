@@ -18,10 +18,15 @@ class Settings(BaseSettings):
     cloudinary_cloud_name: str = ""
     cloudinary_api_key: str = ""
     cloudinary_api_secret: str = ""
+    admin_emails: str = "xorg112@gmail.com"
 
     @property
     def origins_list(self) -> list[str]:
         return [o.strip() for o in self.allowed_origins.split(",") if o.strip()]
+
+    @property
+    def admin_emails_list(self) -> list[str]:
+        return [e.strip() for e in self.admin_emails.split(",") if e.strip()]
 
     class Config:
         env_file = _ENV_FILE

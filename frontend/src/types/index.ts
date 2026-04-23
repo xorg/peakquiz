@@ -42,6 +42,7 @@ export interface User {
   username: string
   email: string
   avatarUrl?: string
+  is_admin?: boolean
 }
 
 export interface TroublePeak {

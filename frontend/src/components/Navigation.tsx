@@ -9,9 +9,10 @@ interface Props {
   onProfileClick: () => void
   onHomeClick: () => void
   onLeaderboardClick: () => void
+  onAdminClick: () => void
 }
 
-export function Navigation({ user, onLoginClick, onLogoutClick, onProfileClick, onHomeClick, onLeaderboardClick }: Props) {
+export function Navigation({ user, onLoginClick, onLogoutClick, onProfileClick, onHomeClick, onLeaderboardClick, onAdminClick }: Props) {
   const { t } = useTranslation()
 
   return (
@@ -21,6 +22,9 @@ export function Navigation({ user, onLoginClick, onLogoutClick, onProfileClick, 
         <button className={styles.navLink} onClick={onLeaderboardClick}>
           {t('globalRankings')}
         </button>
+        {user?.is_admin && (
+          <button className={styles.navLink} onClick={onAdminClick}>Admin</button>
+        )}
         <button className={styles.navLink} onClick={onProfileClick}>
           {user ? user.username : t('profileTitle')}
         </button>

@@ -57,14 +57,22 @@ async def google_callback(request: Request, db: Session = Depends(get_db)):
     token = await oauth.google.authorize_access_token(request)
     userinfo = token.get("userinfo") or await oauth.google.userinfo(token=token)
 
+    email = userinfo.get("email", "")
+    is_admin = email in settings.admin_emails_list
+
     user = db.get(User, userinfo["sub"])
     if not user:
         user = User(
             id=userinfo["sub"],
-            username=userinfo.get("name", userinfo["email"].split("@")[0]),
+            username=userinfo.get("name", email.split("@")[0]),
+            email=email,
+            is_admin=is_admin,
         )
         db.add(user)
-        db.commit()
+    else:
+        user.email = email
+        user.is_admin = is_admin
+    db.commit()
 
     access_token = create_access_token(user.id)
     response = RedirectResponse(url=settings.origins_list[0])
