@@ -96,3 +96,45 @@ export interface Category {
 export type QuizState = 'idle' | 'active' | 'nickname' | 'finished'
 
 export type AnswerState = 'unanswered' | 'correct' | 'wrong'
+
+// Admin types
+export interface AdminPeak {
+  id: number
+  name: string
+  region: string | null
+  elevation: number | null
+  picture_count: number
+}
+
+export interface AdminPicture {
+  id: number
+  cdn_url: string | null
+  original_url: string
+  title: string | null
+  author_name: string | null
+  author_url: string | null
+  license_name: string | null
+  license_url: string | null
+  source: string | null
+}
+
+export interface AdminPeakDetail {
+  id: number
+  name: string
+  region: string | null
+  elevation: number | null
+  mountain_range: string | null
+  peak_type: string | null
+  pictures: AdminPicture[]
+}
+
+export interface WikiSearchResult {
+  filename: string
+  title: string
+  direct_url: string
+  source: string
+  author_name: string | null
+  author_url: string | null
+  license_name: string | null
+  license_url: string | null
+}

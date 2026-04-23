@@ -13,7 +13,7 @@ class Settings(BaseSettings):
     # Comma-separated list of allowed frontend origins, e.g.:
     # ALLOWED_ORIGINS=https://gipfelraten.stefanschneider.me,https://xorg.github.io
     allowed_origins: str = "https://gipfelraten.ch,http://localhost:5173,"
-    backend_url: str = "peakquiz-backend-295049646559.europe-west1.run.app"
+    backend_url: str
     database_url: str = "sqlite:///./peakquiz.db"
     cloudinary_cloud_name: str = ""
     cloudinary_api_key: str = ""

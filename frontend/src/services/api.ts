@@ -1,4 +1,4 @@
-import type { QuizSession, QuizQuestion, AnswerResult, RankingEntry, User, ProfileStats, Category } from '../types'
+import type { QuizSession, QuizQuestion, AnswerResult, RankingEntry, User, ProfileStats, Category, AdminPeak, AdminPeakDetail, AdminPicture, WikiSearchResult } from '../types'
 
 const BASE_URL = import.meta.env.VITE_BACKEND_HOST
   ? `https://${import.meta.env.VITE_BACKEND_HOST}/api`
@@ -14,6 +14,7 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
     const error = await res.text()
     throw new Error(error || `HTTP ${res.status}`)
   }
+  if (res.status === 204) return undefined as T
   return res.json() as Promise<T>
 }
 
@@ -58,6 +59,30 @@ export const api = {
       request<{ username: string }>('/profile/nickname', {
         method: 'PATCH',
         body: JSON.stringify({ nickname, guestId }),
+      }),
+  },
+
+  admin: {
+    peaks: (q?: string, hasPictures?: boolean, offset = 0) => {
+      const params = new URLSearchParams({ limit: '50', offset: String(offset) })
+      if (q) params.set('q', q)
+      if (hasPictures != null) params.set('has_pictures', String(hasPictures))
+      return request<AdminPeak[]>(`/admin/peaks?${params}`)
+    },
+    peak: (id: number) => request<AdminPeakDetail>(`/admin/peaks/${id}`),
+    updatePeak: (id: number, data: { name?: string; region?: string }) =>
+      request<AdminPeakDetail>(`/admin/peaks/${id}`, {
+        method: 'PATCH',
+        body: JSON.stringify(data),
+      }),
+    deletePeak: (id: number) => request<void>(`/admin/peaks/${id}`, { method: 'DELETE' }),
+    deletePicture: (id: number) => request<void>(`/admin/pictures/${id}`, { method: 'DELETE' }),
+    searchImages: (peakId: number, q?: string) =>
+      request<WikiSearchResult[]>(`/admin/peaks/${peakId}/search-images${q ? `?q=${encodeURIComponent(q)}` : ''}`),
+    addPicture: (peakId: number, data: Omit<AdminPicture, 'id' | 'cdn_url'> & { image_url: string }) =>
+      request<AdminPicture>(`/admin/peaks/${peakId}/pictures`, {
+        method: 'POST',
+        body: JSON.stringify(data),
       }),
   },
 }

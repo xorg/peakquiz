@@ -1,11 +1,19 @@
+import cloudinary
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import text
 from starlette.middleware.sessions import SessionMiddleware
 
-from .api.routes import auth, profile, quiz, rankings
+from .api.routes import admin, auth, profile, quiz, rankings
 from .core.config import settings
 from .db.database import Base, engine
+
+if settings.cloudinary_cloud_name:
+    cloudinary.config(
+        cloud_name=settings.cloudinary_cloud_name,
+        api_key=settings.cloudinary_api_key,
+        api_secret=settings.cloudinary_api_secret,
+    )
 
 Base.metadata.create_all(bind=engine)
 
@@ -40,6 +48,7 @@ app.include_router(auth.router, prefix="/api")
 app.include_router(quiz.router, prefix="/api")
 app.include_router(rankings.router, prefix="/api")
 app.include_router(profile.router, prefix="/api")
+app.include_router(admin.router, prefix="/api")
 
 
 @app.get("/api/health")
