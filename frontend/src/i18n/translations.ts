@@ -17,6 +17,9 @@ export const translations = {
     signIn: 'Sign in with Google',
     signOut: 'Sign out',
 
+    // Footer
+    footerContact: 'Contact',
+
     // Category picker
     categoryTitle: 'Choose your challenge',
     categorySubtitle: 'Select a region or test yourself on all Swiss peaks',
@@ -84,6 +87,9 @@ export const translations = {
     // Navigation
     signIn: 'Mit Google anmelden',
     signOut: 'Abmelden',
+
+    // Footer
+    footerContact: 'Kontakt',
 
     // Category picker
     categoryTitle: 'Wähle deine Herausforderung',

@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { api } from './services/api'
 import { Navigation } from './components/Navigation'
+import { Footer } from './components/Footer'
 import { LandingPage } from './pages/LandingPage'
 import { CategoryPage } from './pages/CategoryPage'
 import { QuizPage } from './pages/QuizPage'
@@ -46,6 +47,7 @@ export default function App() {
       )}
       {route === 'leaderboard' && <LeaderboardPage onPlay={() => setRoute('categories')} />}
       {route === 'profile' && <ProfilePage />}
+      <Footer />
     </>
   )
 }
