@@ -31,6 +31,14 @@ class PeakDetail(BaseModel):
     pictures: list[PictureItem]
 
 
+class PeakCreate(BaseModel):
+    name: str
+    region: str | None = None
+    elevation: int | None = None
+    mountain_range: str | None = None
+    peak_type: str | None = None
+
+
 class PeakUpdate(BaseModel):
     name: str | None = None
     region: str | None = None

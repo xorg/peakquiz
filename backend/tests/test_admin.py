@@ -165,6 +165,51 @@ class TestListPeaks:
         assert offset_data[0]["id"] == all_data[2]["id"]
 
 
+# ── Create peak ───────────────────────────────────────────────────────────────
+
+
+class TestCreatePeak:
+    def test_creates_peak_with_required_name(self, admin_client, db):
+        resp = admin_client.post("/api/admin/peaks", json={"name": "Jungfrau"})
+        assert resp.status_code == 201
+        data = resp.json()
+        assert data["name"] == "Jungfrau"
+        assert db.query(Peak).filter(Peak.name == "Jungfrau").first() is not None
+
+    def test_creates_peak_with_all_fields(self, admin_client, db):
+        resp = admin_client.post("/api/admin/peaks", json={
+            "name": "Finsteraarhorn",
+            "region": "Bern",
+            "elevation": 4274,
+            "mountain_range": "Bernese Alps",
+            "peak_type": "Hauptgipfel",
+        })
+        assert resp.status_code == 201
+        p = db.query(Peak).filter(Peak.name == "Finsteraarhorn").first()
+        assert p.region == "Bern"
+        assert p.elevation == 4274
+        assert p.mountain_range == "Bernese Alps"
+        assert p.peak_type == "Hauptgipfel"
+
+    def test_response_includes_empty_pictures_list(self, admin_client):
+        resp = admin_client.post("/api/admin/peaks", json={"name": "Weisshorn"})
+        assert resp.json()["pictures"] == []
+
+    def test_name_stripped_of_whitespace(self, admin_client, db):
+        admin_client.post("/api/admin/peaks", json={"name": "  Tödi  "})
+        assert db.query(Peak).filter(Peak.name == "Tödi").first() is not None
+
+    def test_empty_name_returns_400(self, admin_client):
+        assert admin_client.post("/api/admin/peaks", json={"name": "   "}).status_code == 400
+
+    def test_duplicate_name_returns_409(self, admin_client, peak):
+        resp = admin_client.post("/api/admin/peaks", json={"name": "Matterhorn"})
+        assert resp.status_code == 409
+
+    def test_requires_admin(self, regular_client):
+        assert regular_client.post("/api/admin/peaks", json={"name": "X"}).status_code == 403
+
+
 # ── Get peak detail ───────────────────────────────────────────────────────────
 
 

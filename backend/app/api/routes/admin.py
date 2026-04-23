@@ -6,6 +6,7 @@ from ...db.database import get_db
 from ...db.models import Peak, Picture, User
 from ...schemas.admin import (
     AddPictureRequest,
+    PeakCreate,
     PeakDetail,
     PeakListItem,
     PeakUpdate,
@@ -97,6 +98,29 @@ def list_peaks(
         PeakListItem(id=p.id, name=p.name, region=p.region, elevation=p.elevation, picture_count=cnt)
         for p, cnt in query.all()
     ]
+
+
+@router.post("/peaks", response_model=PeakDetail, status_code=201)
+def create_peak(
+    body: PeakCreate,
+    db: Session = Depends(get_db),
+    _admin: User = Depends(get_admin_user),
+):
+    name = body.name.strip()
+    if not name:
+        raise HTTPException(status_code=400, detail="Name cannot be empty")
+    if db.query(Peak).filter(Peak.name == name).first():
+        raise HTTPException(status_code=409, detail="A peak with that name already exists")
+    peak = Peak(
+        name=name,
+        region=body.region.strip() if body.region else None,
+        elevation=body.elevation,
+        mountain_range=body.mountain_range.strip() if body.mountain_range else None,
+        peak_type=body.peak_type.strip() if body.peak_type else None,
+    )
+    db.add(peak)
+    db.commit()
+    return _peak_detail_response(_load_peak_detail(peak.id, db))
 
 
 @router.get("/peaks/{peak_id}", response_model=PeakDetail)

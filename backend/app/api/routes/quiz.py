@@ -44,20 +44,19 @@ def _streak_multiplier(streak: int) -> int:
 _sessions: dict[str, dict] = {}
 
 
-def _select_picture(peak: Peak, choose_random=True) -> Picture | None:
-    """Pick a random picture for the peak, only using CDN images."""
+def _select_picture(peak: Peak, exclude_pic_ids: set[int] | None = None) -> Picture | None:
+    """Pick a random CDN picture for the peak, optionally skipping already-seen picture IDs."""
     cdn_pics = [p for p in peak.pictures if p.cdn_url]
-    if not cdn_pics:
-        return None
-    choice = random.choice(cdn_pics) if choose_random else cdn_pics[0]
-    return choice
+    if exclude_pic_ids:
+        cdn_pics = [p for p in cdn_pics if p.id not in exclude_pic_ids]
+    return random.choice(cdn_pics) if cdn_pics else None
 
 
-def _make_question(peak: Peak, distractor_pool: list[Peak]) -> QuizQuestion:
+def _make_question(peak: Peak, distractor_pool: list[Peak], picture: Picture | None = None) -> QuizQuestion:
     distractors = random.sample([p for p in distractor_pool if p.id != peak.id], 3)
     options = [peak.name] + [d.name for d in distractors]
     random.shuffle(options)
-    pic = _select_picture(peak)
+    pic = picture if picture is not None else _select_picture(peak)
     image_url = ""
     if pic:
         cdn = (pic.cdn_url or "").replace("/upload/", "/upload/w_800,c_limit,f_auto,q_auto/", 1)
@@ -161,12 +160,18 @@ def start_quiz(body: StartRequest = StartRequest(), db: Session = Depends(get_db
         raise HTTPException(status_code=503, detail="Not enough peaks in database")
 
     selected = random.sample(peaks, min(INITIAL_BATCH, len(peaks)))
-    questions = [_make_question(p, peaks) for p in selected]
+    seen_pic_ids: set[int] = set()
+    questions = []
+    for p in selected:
+        pic = _select_picture(p)
+        if pic:
+            seen_pic_ids.add(pic.id)
+        questions.append(_make_question(p, peaks, picture=pic))
 
     session_id = str(uuid.uuid4())
     _sessions[session_id] = {
         "answers": {q.id: q.peak.name for q in questions},
-        "seen_ids": {p.id for p in selected},
+        "seen_pic_ids": seen_pic_ids,
         "score": 0,
         "correct_count": 0,
         "wrong_count": 0,
@@ -190,15 +195,22 @@ def next_question(session_id: str, db: Session = Depends(get_db)):
     region = session.get("region")
     min_elevation = session.get("min_elevation")
     peaks = _eligible_peaks(db, region, min_elevation)
-    unseen = [p for p in peaks if p.id not in session["seen_ids"]]
-    if not unseen:
+    seen_pic_ids: set[int] = session["seen_pic_ids"]
+
+    available = [
+        p for p in peaks
+        if any(pic.id not in seen_pic_ids for pic in p.pictures if pic.cdn_url)
+    ]
+    if not available:
         raise HTTPException(status_code=404, detail="No more peaks available")
 
-    peak = random.choice(unseen)
-    session["seen_ids"].add(peak.id)
+    peak = random.choice(available)
+    pic = _select_picture(peak, exclude_pic_ids=seen_pic_ids)
+    if pic:
+        seen_pic_ids.add(pic.id)
     session["answers"][peak.id] = peak.name
 
-    return _make_question(peak, peaks)
+    return _make_question(peak, peaks, picture=pic)
 
 
 @router.post("/answer", response_model=AnswerResult)

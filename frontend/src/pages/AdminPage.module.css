@@ -22,12 +22,35 @@
   flex-shrink: 0;
 }
 
+.titleRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-3);
+}
+
 .title {
   font-family: var(--font-display);
   font-size: var(--text-title-lg);
   font-weight: 900;
   color: var(--color-primary);
-  margin-bottom: var(--space-3);
+}
+
+.newPeakBtn {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: var(--space-1) var(--space-3);
+  background: var(--color-primary);
+  color: var(--color-on-primary);
+  border-radius: var(--radius-md);
+  font-size: var(--text-label-sm);
+  font-weight: 600;
+  transition: opacity var(--transition-fast);
+}
+
+.newPeakBtn:hover {
+  opacity: 0.85;
 }
 
 .searchRow {
@@ -151,6 +174,65 @@
   height: 100%;
   color: var(--color-on-surface-variant);
   font-size: var(--text-body-md);
+}
+
+/* ── New peak form ── */
+
+.newPeakForm {
+  max-width: 480px;
+}
+
+.formGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-4);
+  margin-bottom: var(--space-4);
+}
+
+.formLabel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  font-size: var(--text-label-md);
+  color: var(--color-on-surface-variant);
+}
+
+.formInput {
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--color-outline-variant);
+  border-radius: var(--radius-md);
+  font-size: var(--text-body-sm);
+  background: var(--color-surface-container);
+  color: var(--color-on-surface);
+  outline: none;
+}
+
+.formInput:focus {
+  border-color: var(--color-primary);
+}
+
+.formError {
+  font-size: var(--text-label-sm);
+  color: #dc2626;
+  margin-bottom: var(--space-3);
+}
+
+.formActions {
+  display: flex;
+  gap: var(--space-3);
+}
+
+.cancelBtn {
+  padding: var(--space-2) var(--space-4);
+  border: 1px solid var(--color-outline-variant);
+  border-radius: var(--radius-md);
+  font-size: var(--text-label-md);
+  color: var(--color-on-surface-variant);
+  transition: background var(--transition-fast);
+}
+
+.cancelBtn:hover {
+  background: var(--color-surface-container);
 }
 
 /* ── Peak header / edit form ── */

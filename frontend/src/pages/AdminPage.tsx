@@ -21,6 +21,15 @@ export function AdminPage() {
   const [loadingDetail, setLoadingDetail] = useState(false)
   const [saving, setSaving] = useState(false)
 
+  // New peak form state
+  const [creatingNew, setCreatingNew] = useState(false)
+  const [newName, setNewName] = useState('')
+  const [newRegion, setNewRegion] = useState('')
+  const [newElevation, setNewElevation] = useState('')
+  const [newMountainRange, setNewMountainRange] = useState('')
+  const [creating, setCreating] = useState(false)
+  const [createError, setCreateError] = useState('')
+
   // Wiki search state
   const [wikiQuery, setWikiQuery] = useState('')
   const [wikiResults, setWikiResults] = useState<WikiSearchResult[]>([])
@@ -60,6 +69,45 @@ export function AdminPage() {
   useEffect(() => {
     if (selectedId != null) loadDetail(selectedId)
   }, [selectedId, loadDetail])
+
+  const selectPeak = (id: number) => {
+    setCreatingNew(false)
+    setSelectedId(id)
+  }
+
+  const openNewPeakForm = () => {
+    setSelectedId(null)
+    setDetail(null)
+    setNewName('')
+    setNewRegion('')
+    setNewElevation('')
+    setNewMountainRange('')
+    setCreateError('')
+    setCreatingNew(true)
+  }
+
+  const createPeak = async () => {
+    const name = newName.trim()
+    if (!name) { setCreateError('Name is required.'); return }
+    setCreating(true)
+    setCreateError('')
+    try {
+      const created = await api.admin.createPeak({
+        name,
+        region: newRegion.trim() || undefined,
+        elevation: newElevation ? parseInt(newElevation, 10) : undefined,
+        mountain_range: newMountainRange.trim() || undefined,
+      })
+      setPeaks(ps => [{ id: created.id, name: created.name, region: created.region, elevation: created.elevation, picture_count: 0 }, ...ps])
+      setCreatingNew(false)
+      setSelectedId(created.id)
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : 'Failed to create peak.'
+      setCreateError(msg.includes('409') ? 'A peak with that name already exists.' : msg)
+    } finally {
+      setCreating(false)
+    }
+  }
 
   const savePeak = async () => {
     if (!detail) return
@@ -134,7 +182,13 @@ export function AdminPage() {
       {/* ── Left panel ── */}
       <aside className={styles.sidebar}>
         <div className={styles.sidebarHeader}>
-          <h1 className={styles.title}>Admin</h1>
+          <div className={styles.titleRow}>
+            <h1 className={styles.title}>Admin</h1>
+            <button className={styles.newPeakBtn} onClick={openNewPeakForm} title="New peak">
+              <Plus size={16} />
+              New
+            </button>
+          </div>
           <div className={styles.searchRow}>
             <Search size={14} className={styles.searchIcon} />
             <input
@@ -165,7 +219,7 @@ export function AdminPage() {
             <button
               key={peak.id}
               className={`${styles.peakItem} ${selectedId === peak.id ? styles.peakItemActive : ''}`}
-              onClick={() => setSelectedId(peak.id)}
+              onClick={() => selectPeak(peak.id)}
             >
               <div className={styles.peakItemName}>{peak.name}</div>
               <div className={styles.peakItemMeta}>
@@ -183,7 +237,64 @@ export function AdminPage() {
 
       {/* ── Right panel ── */}
       <main className={styles.detail}>
-        {selectedId == null ? (
+        {creatingNew ? (
+          <div className={styles.newPeakForm}>
+            <h2 className={styles.sectionTitle}>New Peak</h2>
+            <div className={styles.formGrid}>
+              <label className={styles.formLabel}>
+                Name *
+                <input
+                  className={styles.formInput}
+                  placeholder="e.g. Matterhorn"
+                  value={newName}
+                  onChange={e => setNewName(e.target.value)}
+                  onKeyDown={e => e.key === 'Enter' && createPeak()}
+                  autoFocus
+                />
+              </label>
+              <label className={styles.formLabel}>
+                Region
+                <input
+                  className={styles.formInput}
+                  placeholder="e.g. Valais"
+                  value={newRegion}
+                  onChange={e => setNewRegion(e.target.value)}
+                  onKeyDown={e => e.key === 'Enter' && createPeak()}
+                />
+              </label>
+              <label className={styles.formLabel}>
+                Elevation (m)
+                <input
+                  className={styles.formInput}
+                  type="number"
+                  placeholder="e.g. 4478"
+                  value={newElevation}
+                  onChange={e => setNewElevation(e.target.value)}
+                  onKeyDown={e => e.key === 'Enter' && createPeak()}
+                />
+              </label>
+              <label className={styles.formLabel}>
+                Mountain range
+                <input
+                  className={styles.formInput}
+                  placeholder="e.g. Pennine Alps"
+                  value={newMountainRange}
+                  onChange={e => setNewMountainRange(e.target.value)}
+                  onKeyDown={e => e.key === 'Enter' && createPeak()}
+                />
+              </label>
+            </div>
+            {createError && <p className={styles.formError}>{createError}</p>}
+            <div className={styles.formActions}>
+              <button className={styles.saveBtn} onClick={createPeak} disabled={creating}>
+                {creating ? 'Creating…' : 'Create Peak'}
+              </button>
+              <button className={styles.cancelBtn} onClick={() => setCreatingNew(false)}>
+                Cancel
+              </button>
+            </div>
+          </div>
+        ) : selectedId == null ? (
           <div className={styles.emptyDetail}>Select a peak to edit</div>
         ) : loadingDetail ? (
           <div className={styles.emptyDetail}>Loading…</div>
