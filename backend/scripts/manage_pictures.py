@@ -320,7 +320,103 @@ def run_upload_missing(dry_run: bool, db: Session) -> None:
         print(f"\nDone — {ok} uploaded, {fail} failed.")
 
 
-def run_find_missing(db: Session) -> None:
+def _search_and_save_for_peak(peak: Peak, db: Session) -> tuple[int, int]:
+    """Interactively search Wikimedia and save pictures for one peak. Returns (saved, skipped)."""
+    print(f"── {peak.name} ({peak.elevation} m, {peak.region}) ──")
+    candidates = search_wikimedia(peak.name)
+
+    if not candidates:
+        print("   No results found on Wikimedia Commons.\n")
+        return 0, 0
+
+    saved = skipped = 0
+    accepted_for_peak = False
+    for c in candidates:
+        print(f"\n   Title  : {c['title']}")
+        print(f"   Author : {c['author_name'] or '(unknown)'}", end="")
+        print(f"  ({c['author_url']})" if c.get("author_url") else "")
+        print(f"   License: {c['license_name'] or '(unknown)'}", end="")
+        print(f"  ({c['license_url']})" if c.get("license_url") else "")
+        print(f"   Source : {c['source']}")
+        print(f"   URL    : {c['direct_url']}")
+
+        answer = ""
+        while answer not in ("y", "n", "o", "q"):
+            answer = input("   Accept? [y]es / [n]o / [o]pen in browser / [q]uit peak  → ").strip().lower()
+            if answer == "o":
+                webbrowser.open(c["source"])
+
+        if answer == "q":
+            print("   Skipping remaining results for this peak.")
+            break
+
+        if answer == "n":
+            skipped += 1
+            continue
+
+        existing = db.query(Picture).filter(Picture.peak_id == peak.id).count()
+        suffix = f"-{existing + 1}" if existing > 0 else ""
+        public_id = f"peakquiz/{peak.id}{suffix}"
+        print(f"   Uploading  →  {public_id} …")
+        try:
+            upload = fetch_and_upload(c["direct_url"], public_id)
+        except Exception as e:
+            print(f"   ✗ Failed: {e}")
+            continue
+
+        if upload is None:
+            continue
+
+        cdn, asset_id = upload
+
+        author_id = None
+        if c.get("author_name"):
+            author_id = get_or_create_author(db, c["author_name"], c.get("author_url")).id
+
+        license_id = None
+        if c.get("license_name"):
+            license_id = get_or_create_license(db, c["license_name"], c.get("license_url")).id
+
+        pic = Picture(
+            peak_id=peak.id,
+            original_url=c["direct_url"],
+            cdn_url=cdn,
+            cdn_asset_id=asset_id,
+            author=c.get("author_name"),
+            source=c["source"],
+            title=c["title"],
+            author_id=author_id,
+            license_id=license_id,
+        )
+        db.add(pic)
+        db.commit()
+        print(f"   ✓ Saved  {cdn}")
+        saved += 1
+        accepted_for_peak = True
+
+        if accepted_for_peak:
+            more = input("   Add another picture for this peak? [y/n]  → ").strip().lower()
+            if more != "y":
+                break
+
+    print()
+    return saved, skipped
+
+
+def run_find_pictures(db: Session, name_or_id: str | None = None) -> None:
+    if name_or_id is not None:
+        peak: Peak | None = None
+        if name_or_id.isdigit():
+            peak = db.get(Peak, int(name_or_id))
+        if peak is None:
+            peak = db.query(Peak).filter(Peak.name.ilike(f"%{name_or_id}%")).first()
+        if peak is None:
+            print(f"No peak found matching {name_or_id!r}.")
+            return
+        saved, skipped = _search_and_save_for_peak(peak, db)
+        print(f"Done — {saved} picture(s) saved, {skipped} skipped.")
+        return
+
     peaks_without_pictures = (
         db.query(Peak)
         .outerjoin(Picture, Picture.peak_id == Peak.id)
@@ -335,87 +431,13 @@ def run_find_missing(db: Session) -> None:
 
     print(f"Found {len(peaks_without_pictures)} peak(s) with no pictures.\n")
 
-    saved = skipped = 0
+    total_saved = total_skipped = 0
     for peak in peaks_without_pictures:
-        print(f"── {peak.name} ({peak.elevation} m, {peak.region}) ──")
-        candidates = search_wikimedia(peak.name)
+        s, sk = _search_and_save_for_peak(peak, db)
+        total_saved += s
+        total_skipped += sk
 
-        if not candidates:
-            print("   No results found on Wikimedia Commons.\n")
-            continue
-
-        accepted_for_peak = False
-        for c in candidates:
-            print(f"\n   Title  : {c['title']}")
-            print(f"   Author : {c['author_name'] or '(unknown)'}", end="")
-            print(f"  ({c['author_url']})" if c.get("author_url") else "")
-            print(f"   License: {c['license_name'] or '(unknown)'}", end="")
-            print(f"  ({c['license_url']})" if c.get("license_url") else "")
-            print(f"   Source : {c['source']}")
-            print(f"   URL    : {c['direct_url']}")
-
-            answer = ""
-            while answer not in ("y", "n", "o", "q"):
-                answer = input("   Accept? [y]es / [n]o / [o]pen in browser / [q]uit peak  → ").strip().lower()
-                if answer == "o":
-                    webbrowser.open(c["source"])
-
-            if answer == "q":
-                print("   Skipping remaining results for this peak.")
-                break
-
-            if answer == "n":
-                skipped += 1
-                continue
-
-            existing = db.query(Picture).filter(Picture.peak_id == peak.id).count()
-            suffix = f"-{existing + 1}" if existing > 0 else ""
-            public_id = f"peakquiz/{peak.id}{suffix}"
-            print(f"   Uploading  →  {public_id} …")
-            try:
-                upload = fetch_and_upload(c["direct_url"], public_id)
-            except Exception as e:
-                print(f"   ✗ Failed: {e}")
-                continue
-
-            if upload is None:
-                continue
-
-            cdn, asset_id = upload
-
-            author_id = None
-            if c.get("author_name"):
-                author_id = get_or_create_author(db, c["author_name"], c.get("author_url")).id
-
-            license_id = None
-            if c.get("license_name"):
-                license_id = get_or_create_license(db, c["license_name"], c.get("license_url")).id
-
-            pic = Picture(
-                peak_id=peak.id,
-                original_url=c["direct_url"],
-                cdn_url=cdn,
-                cdn_asset_id=asset_id,
-                author=c.get("author_name"),
-                source=c["source"],
-                title=c["title"],
-                author_id=author_id,
-                license_id=license_id,
-            )
-            db.add(pic)
-            db.commit()
-            print(f"   ✓ Saved  {cdn}")
-            saved += 1
-            accepted_for_peak = True
-
-            if accepted_for_peak:
-                more = input("   Add another picture for this peak? [y/n]  → ").strip().lower()
-                if more != "y":
-                    break
-
-        print()
-
-    print(f"Done — {saved} picture(s) saved, {skipped} skipped.")
+    print(f"Done — {total_saved} picture(s) saved, {total_skipped} skipped.")
 
 
 def run_update_metadata(dry_run: bool, db: Session) -> None:
@@ -558,7 +580,11 @@ def main() -> None:
     p_upload = sub.add_parser("upload-missing", help="Upload pictures missing a CDN URL")
     p_upload.add_argument("--dry-run", action="store_true")
 
-    sub.add_parser("find-missing", help="Search Wikimedia for peaks with no pictures")
+    p_find = sub.add_parser(
+        "find-pictures",
+        help="Search Wikimedia for pictures; omit peak to process all peaks without pictures",
+    )
+    p_find.add_argument("peak", nargs="?", default=None, help="Peak name (partial match) or numeric ID")
 
     p_meta = sub.add_parser("update-metadata", help="Fetch author/license for pictures missing it")
     p_meta.add_argument("--dry-run", action="store_true")
@@ -580,8 +606,8 @@ def main() -> None:
     with Session(engine) as db:
         if args.mode == "upload-missing":
             run_upload_missing(dry_run=args.dry_run, db=db)
-        elif args.mode == "find-missing":
-            run_find_missing(db=db)
+        elif args.mode == "find-pictures":
+            run_find_pictures(db=db, name_or_id=args.peak)
         elif args.mode == "update-metadata":
             run_update_metadata(dry_run=args.dry_run, db=db)
         elif args.mode == "manage-peak":
