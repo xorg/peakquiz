@@ -28,6 +28,11 @@ STREAK_MAX_MULTIPLIER = 4
 CATEGORY_ALL = "all"
 CATEGORY_ALL_NAME = "Schweizer Berge"
 
+# Special categories defined by elevation filter (id → display metadata)
+SPECIAL_CATEGORIES: dict[str, dict] = {
+    "4000m": {"name": "4000m Gipfel", "min_elevation": 4000},
+}
+
 
 def _streak_multiplier(streak: int) -> int:
     if streak < STREAK_THRESHOLD:
@@ -39,13 +44,13 @@ def _streak_multiplier(streak: int) -> int:
 _sessions: dict[str, dict] = {}
 
 
-def _select_picture(peak: Peak) -> Picture | None:
-    """Pick a random picture for the peak, preferring CDN images."""
+def _select_picture(peak: Peak, choose_random=True) -> Picture | None:
+    """Pick a random picture for the peak, only using CDN images."""
     cdn_pics = [p for p in peak.pictures if p.cdn_url]
-    if cdn_pics:
-        return random.choice(cdn_pics)
-    any_pics = [p for p in peak.pictures if p.original_url]
-    return random.choice(any_pics) if any_pics else None
+    if not cdn_pics:
+        return None
+    choice = random.choice(cdn_pics) if choose_random else cdn_pics[0]
+    return choice
 
 
 def _make_question(peak: Peak, distractor_pool: list[Peak]) -> QuizQuestion:
@@ -73,7 +78,7 @@ def _make_question(peak: Peak, distractor_pool: list[Peak]) -> QuizQuestion:
     )
 
 
-def _eligible_peaks(db: Session, region: str | None = None) -> list[Peak]:
+def _eligible_peaks(db: Session, region: str | None = None, min_elevation: int | None = None) -> list[Peak]:
     q = (
         db.query(Peak)
         .join(Picture)
@@ -86,6 +91,8 @@ def _eligible_peaks(db: Session, region: str | None = None) -> list[Peak]:
     )
     if region:
         q = q.filter(Peak.region == region)
+    if min_elevation is not None:
+        q = q.filter(Peak.elevation >= min_elevation)
     return q.all()
 
 
@@ -104,6 +111,21 @@ def get_categories(db: Session = Depends(get_db)):
             imageUrl=(overall_pic.cdn_url or "") if overall_pic else "",
         )
     ]
+
+    # Special categories (elevation-filtered)
+    for cat_id, meta in SPECIAL_CATEGORIES.items():
+        special_peaks = _eligible_peaks(db, min_elevation=meta["min_elevation"])
+        if special_peaks:
+            highest_sp = max(special_peaks, key=lambda p: p.elevation or 0)
+            highest_sp_pic = _select_picture(highest_sp)
+            categories.append(
+                CategoryResponse(
+                    id=cat_id,
+                    name=meta["name"],
+                    peakCount=len(special_peaks),
+                    imageUrl=(highest_sp_pic.cdn_url or "") if highest_sp_pic else "",
+                )
+            )
 
     # One entry per region
     regions: dict[str, list[Peak]] = {}
@@ -128,13 +150,15 @@ def get_categories(db: Session = Depends(get_db)):
 
 @router.post("/start", response_model=QuizSession)
 def start_quiz(body: StartRequest = StartRequest(), db: Session = Depends(get_db)):
-    region = None if (body.category is None or body.category == CATEGORY_ALL) else body.category
+    cat = body.category or CATEGORY_ALL
+    special = SPECIAL_CATEGORIES.get(cat)
+    region = None if (special or cat == CATEGORY_ALL) else cat
+    min_elevation = special["min_elevation"] if special else None
 
-    peaks = _eligible_peaks(db, region)
+    peaks = _eligible_peaks(db, region, min_elevation)
     if len(peaks) < 4:
         raise HTTPException(status_code=503, detail="Not enough peaks in database")
 
-    # Distractors come from the same regional pool
     selected = random.sample(peaks, min(INITIAL_BATCH, len(peaks)))
     questions = [_make_question(p, peaks) for p in selected]
 
@@ -148,8 +172,9 @@ def start_quiz(body: StartRequest = StartRequest(), db: Session = Depends(get_db
         "streak": 0,
         "guess_ids": [],
         "pending_guesses": [],
-        "category": body.category or CATEGORY_ALL,
+        "category": cat,
         "region": region,
+        "min_elevation": min_elevation,
     }
 
     return QuizSession(sessionId=session_id, questions=questions)
@@ -162,7 +187,8 @@ def next_question(session_id: str, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Session not found")
 
     region = session.get("region")
-    peaks = _eligible_peaks(db, region)
+    min_elevation = session.get("min_elevation")
+    peaks = _eligible_peaks(db, region, min_elevation)
     unseen = [p for p in peaks if p.id not in session["seen_ids"]]
     if not unseen:
         raise HTTPException(status_code=404, detail="No more peaks available")
