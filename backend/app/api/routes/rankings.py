@@ -30,10 +30,17 @@ def get_category_rankings(
     limit: int = Query(default=50, le=100),
     db: Session = Depends(get_db),
 ):
+    from ...api.routes.quiz import CATEGORY_ALL  # avoid circular at module level
+
+    cat_filter = (
+        (Game.category == category) | Game.category.is_(None)
+        if category == CATEGORY_ALL
+        else Game.category == category
+    )
     rows = (
         db.query(User.username, func.max(Game.score).label("best"))
         .join(Game, Game.user_id == User.id)
-        .filter(Game.category == category)
+        .filter(cat_filter)
         .group_by(User.id)
         .order_by(func.max(Game.score).desc())
         .limit(limit)

@@ -37,9 +37,7 @@ export function LeaderboardPage({ finalScore, onPlayAgain, onPlay, answerHistory
 
   useEffect(() => {
     setLoading(true)
-    const fetch = selectedTab === CATEGORY_ALL
-      ? api.rankings.global()
-      : api.rankings.byCategory(selectedTab)
+    const fetch = api.rankings.byCategory(selectedTab)
     fetch
       .then(setEntries)
       .catch(() => setEntries([]))

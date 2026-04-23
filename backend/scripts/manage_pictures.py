@@ -1,10 +1,11 @@
 """
-Upload pictures that are missing a CDN URL to Cloudinary and update the database.
+Manage peak pictures: upload to CDN, enrich metadata, find missing, or remove pictures.
 
-Modes:
-    uv run scripts/upload_missing_cdn_images.py              # upload existing pictures missing a CDN URL
-    uv run scripts/upload_missing_cdn_images.py --dry-run    # preview without uploading
-    uv run scripts/upload_missing_cdn_images.py --find-missing-pictures  # search Wikimedia for peaks with no pictures
+Usage:
+    uv run scripts/manage_pictures.py upload-missing [--dry-run]
+    uv run scripts/manage_pictures.py find-missing
+    uv run scripts/manage_pictures.py update-metadata [--dry-run]
+    uv run scripts/manage_pictures.py manage-peak <name-or-id>
 """
 
 import argparse
@@ -26,7 +27,6 @@ from PIL import Image
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session, joinedload
 
-# Load env and app path
 _backend_dir = Path(__file__).parent.parent
 load_dotenv(_backend_dir / ".env")
 
@@ -35,7 +35,7 @@ sys.path.insert(0, str(_backend_dir))
 from app.core.config import settings  # noqa: E402, I001
 from app.db.models import Author, License, Peak, Picture  # noqa: E402
 
-MAX_UPLOAD_BYTES = 10 * 1024 * 1024  # 10 MB — Cloudinary free tier limit
+MAX_UPLOAD_BYTES = 10 * 1024 * 1024
 
 _WIKI_DATEI_PREFIXES = (
     "https://de.wikipedia.org/wiki/Datei:",
@@ -51,7 +51,6 @@ def _strip_html(text: str) -> str:
 
 
 def _extract_author(html: str) -> tuple[str, str | None]:
-    """Return (name, profile_url) from the Artist extmetadata HTML value."""
     match = re.search(r'href="([^"]+)"', html)
     name = _strip_html(html)
     if not match:
@@ -78,17 +77,14 @@ def download(url: str) -> bytes:
 # ── Wikimedia metadata ────────────────────────────────────────────────────────
 
 def _wiki_filename(url: str) -> str | None:
-    """Return the bare Commons filename for any Wikimedia URL, or None for unrecognised URLs."""
     if any(url.startswith(p) for p in _WIKI_DATEI_PREFIXES):
         return url.split(":")[-1]
-    # Direct upload URLs: https://upload.wikimedia.org/wikipedia/commons/a/ab/Filename.jpg
     if url.startswith("https://upload.wikimedia.org/"):
         return urllib.parse.unquote(url.rstrip("/").split("/")[-1])
     return None
 
 
 def _extmetadata(filename: str) -> dict:
-    """Fetch extmetadata from the MediaWiki action API for a Commons filename."""
     url = (
         "https://commons.wikimedia.org/w/api.php"
         f"?action=query&titles=File:{urllib.parse.quote(filename)}"
@@ -104,16 +100,13 @@ def _extmetadata(filename: str) -> dict:
 
 
 def resolve_image_metadata(url: str) -> dict:
-    """
-    For a Wikipedia file-page URL return a dict with:
-      direct_url, author_name, author_url, title, source, license_name, license_url.
-    For direct image URLs only direct_url is set.
-    """
     filename = _wiki_filename(url)
     if not filename:
         return {"direct_url": url}
 
-    file_data = _get(f"https://api.wikimedia.org/core/v1/commons/file/File:{urllib.parse.quote(filename)}")
+    file_data = _get(
+        f"https://api.wikimedia.org/core/v1/commons/file/File:{urllib.parse.quote(filename)}"
+    )
     direct_url = file_data.get("original", {}).get("url", url)
 
     meta = _extmetadata(filename)
@@ -138,11 +131,6 @@ def resolve_image_metadata(url: str) -> dict:
 # ── Wikimedia search ──────────────────────────────────────────────────────────
 
 def search_wikimedia(peak_name: str, limit: int = 6) -> list[dict]:
-    """
-    Search Wikimedia Commons (namespace 6 = Files) for images of a peak.
-    Returns a list of dicts with keys:
-      filename, title, direct_url, author_name, author_url, license_name, license_url, source.
-    """
     url = (
         "https://commons.wikimedia.org/w/api.php"
         "?action=query"
@@ -221,7 +209,6 @@ def get_or_create_license(db: Session, name: str, url: str | None) -> License:
 # ── Image processing ──────────────────────────────────────────────────────────
 
 def compress(data: bytes) -> bytes:
-    """Reduce image to fit within MAX_UPLOAD_BYTES."""
     img = Image.open(io.BytesIO(data)).convert("RGB")
 
     for quality in (95, 85, 75, 60):
@@ -268,7 +255,6 @@ def fetch_and_upload(image_url: str, public_id: str) -> tuple[str, str] | None:
 # ── Modes ─────────────────────────────────────────────────────────────────────
 
 def _apply_metadata(db: Session, pic: Picture, meta: dict) -> None:
-    """Write author, license and text fields to an existing Picture row."""
     if meta.get("author_name") and not pic.author_id:
         author = get_or_create_author(db, meta["author_name"], meta.get("author_url"))
         pic.author_id = author.id
@@ -283,8 +269,7 @@ def _apply_metadata(db: Session, pic: Picture, meta: dict) -> None:
         pic.source = meta["source"]
 
 
-def run_upload_missing_cdn(dry_run: bool, db: Session) -> None:
-    """Upload existing picture rows that are missing a CDN URL."""
+def run_upload_missing(dry_run: bool, db: Session) -> None:
     pictures = (
         db.query(Picture)
         .filter(Picture.cdn_url.is_(None))
@@ -322,21 +307,20 @@ def run_upload_missing_cdn(dry_run: bool, db: Session) -> None:
             fail += 1
             continue
 
-        cdn_url, asset_id = upload
-        pic.cdn_url = cdn_url
+        cdn, asset_id = upload
+        pic.cdn_url = cdn
         pic.cdn_asset_id = asset_id
         _apply_metadata(db, pic, meta)
         db.add(pic)
         db.commit()
-        print(f"        ✓ {cdn_url}")
+        print(f"        ✓ {cdn}")
         ok += 1
 
     if not dry_run:
         print(f"\nDone — {ok} uploaded, {fail} failed.")
 
 
-def run_find_missing_pictures(db: Session) -> None:
-    """Search Wikimedia for peaks that have no pictures at all and prompt for upload."""
+def run_find_missing(db: Session) -> None:
     peaks_without_pictures = (
         db.query(Peak)
         .outerjoin(Picture, Picture.peak_id == Peak.id)
@@ -384,7 +368,6 @@ def run_find_missing_pictures(db: Session) -> None:
                 skipped += 1
                 continue
 
-            # Use a 1-based index suffix to keep public_ids unique per peak
             existing = db.query(Picture).filter(Picture.peak_id == peak.id).count()
             suffix = f"-{existing + 1}" if existing > 0 else ""
             public_id = f"peakquiz/{peak.id}{suffix}"
@@ -398,7 +381,7 @@ def run_find_missing_pictures(db: Session) -> None:
             if upload is None:
                 continue
 
-            cdn_url, asset_id = upload
+            cdn, asset_id = upload
 
             author_id = None
             if c.get("author_name"):
@@ -411,7 +394,7 @@ def run_find_missing_pictures(db: Session) -> None:
             pic = Picture(
                 peak_id=peak.id,
                 original_url=c["direct_url"],
-                cdn_url=cdn_url,
+                cdn_url=cdn,
                 cdn_asset_id=asset_id,
                 author=c.get("author_name"),
                 source=c["source"],
@@ -421,7 +404,7 @@ def run_find_missing_pictures(db: Session) -> None:
             )
             db.add(pic)
             db.commit()
-            print(f"   ✓ Saved  {cdn_url}")
+            print(f"   ✓ Saved  {cdn}")
             saved += 1
             accepted_for_peak = True
 
@@ -436,7 +419,6 @@ def run_find_missing_pictures(db: Session) -> None:
 
 
 def run_update_metadata(dry_run: bool, db: Session) -> None:
-    """Fetch author/license metadata from Wikimedia for pictures that are missing it."""
     pictures = (
         db.query(Picture)
         .filter(Picture.original_url.isnot(None))
@@ -499,19 +481,91 @@ def run_update_metadata(dry_run: bool, db: Session) -> None:
         print(f"\nDone — {ok} updated, {skipped} skipped, {fail} failed.")
 
 
+def run_manage_peak(name_or_id: str, db: Session) -> None:
+    """List and interactively delete pictures for a single peak."""
+    # Resolve peak by ID or name substring
+    peak: Peak | None = None
+    if name_or_id.isdigit():
+        peak = db.get(Peak, int(name_or_id))
+    if peak is None:
+        peak = (
+            db.query(Peak)
+            .filter(Peak.name.ilike(f"%{name_or_id}%"))
+            .first()
+        )
+    if peak is None:
+        print(f"No peak found matching {name_or_id!r}.")
+        return
+
+    pictures = (
+        db.query(Picture)
+        .filter(Picture.peak_id == peak.id)
+        .options(joinedload(Picture.author_rel), joinedload(Picture.license_rel))
+        .all()
+    )
+
+    print(f"\n── {peak.name} (id={peak.id}, {peak.elevation} m, {peak.region}) ──")
+    if not pictures:
+        print("  No pictures found.")
+        return
+
+    print(f"  {len(pictures)} picture(s):\n")
+
+    deleted = 0
+    for pic in pictures:
+        author = pic.author_rel.name if pic.author_rel else pic.author or "(unknown)"
+        license_ = pic.license_rel.name if pic.license_rel else "(unknown)"
+        print(f"  [{pic.id}]")
+        print(f"    CDN    : {pic.cdn_url or '(none)'}")
+        print(f"    Source : {pic.original_url}")
+        print(f"    Author : {author}")
+        print(f"    License: {license_}")
+        if pic.title:
+            print(f"    Title  : {pic.title}")
+
+        answer = ""
+        while answer not in ("k", "d", "o"):
+            answer = input("    Action? [k]eep / [d]elete / [o]pen in browser  → ").strip().lower()
+            if answer == "o":
+                url = pic.source or pic.cdn_url or pic.original_url
+                if url:
+                    webbrowser.open(url)
+
+        if answer == "d":
+            if pic.cdn_url and pic.cdn_asset_id:
+                try:
+                    cloudinary.uploader.destroy(pic.cdn_asset_id, resource_type="image")
+                    print("    ✓ Removed from Cloudinary.")
+                except Exception as e:
+                    print(f"    ✗ Cloudinary deletion failed: {e}")
+            db.delete(pic)
+            db.commit()
+            print("    ✓ Deleted from database.")
+            deleted += 1
+        else:
+            print("    – Kept.")
+        print()
+
+    print(f"Done — {deleted} picture(s) deleted, {len(pictures) - deleted} kept.")
+
+
 # ── Entry point ───────────────────────────────────────────────────────────────
 
 def main() -> None:
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--dry-run", action="store_true", help="Preview without writing changes")
-    parser.add_argument(
-        "--find-missing-pictures", action="store_true",
-        help="Search Wikimedia for peaks with no pictures",
-    )
-    parser.add_argument(
-        "--update-metadata", action="store_true",
-        help="Fetch author/license metadata for pictures missing it",
-    )
+    parser = argparse.ArgumentParser(description="Manage peak pictures")
+    sub = parser.add_subparsers(dest="mode", required=True)
+
+    p_upload = sub.add_parser("upload-missing", help="Upload pictures missing a CDN URL")
+    p_upload.add_argument("--dry-run", action="store_true")
+
+    sub.add_parser("find-missing", help="Search Wikimedia for peaks with no pictures")
+
+    p_meta = sub.add_parser("update-metadata", help="Fetch author/license for pictures missing it")
+    p_meta.add_argument("--dry-run", action="store_true")
+
+    p_manage = sub.add_parser("manage-peak", help="List and remove pictures for a single peak")
+    p_manage.add_argument("peak", help="Peak name (partial match) or numeric ID")
+
     args = parser.parse_args()
 
     cloudinary.config(
@@ -524,12 +578,14 @@ def main() -> None:
     engine = create_engine(settings.database_url, connect_args={"check_same_thread": False})
 
     with Session(engine) as db:
-        if args.find_missing_pictures:
-            run_find_missing_pictures(db)
-        elif args.update_metadata:
+        if args.mode == "upload-missing":
+            run_upload_missing(dry_run=args.dry_run, db=db)
+        elif args.mode == "find-missing":
+            run_find_missing(db=db)
+        elif args.mode == "update-metadata":
             run_update_metadata(dry_run=args.dry_run, db=db)
-        else:
-            run_upload_missing_cdn(dry_run=args.dry_run, db=db)
+        elif args.mode == "manage-peak":
+            run_manage_peak(name_or_id=args.peak, db=db)
 
 
 if __name__ == "__main__":
