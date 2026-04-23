@@ -31,6 +31,9 @@
 }
 
 .navLink {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
   font-family: var(--font-label);
   font-weight: 500;
   font-size: var(--text-label-lg);
@@ -77,6 +80,28 @@
   transition: color var(--transition-fast);
 }
 
+.btnSecondary {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
 .btnSecondary:hover {
   color: var(--color-on-surface);
+}
+
+.btnPrimary {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+@media (max-width: 520px) {
+  .label {
+    display: none;
+  }
+
+  .actions {
+    gap: var(--space-3);
+  }
 }

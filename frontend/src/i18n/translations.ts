@@ -14,7 +14,7 @@ export const translations = {
     feature3Desc: 'See how you compare to mountain enthusiasts worldwide',
 
     // Navigation
-    signIn: 'Sign in with Google',
+    signIn: 'Sign in',
     signOut: 'Sign out',
 
     // Footer
@@ -85,7 +85,7 @@ export const translations = {
     feature3Desc: 'Vergleiche dich mit anderen Bergbegeisterten',
 
     // Navigation
-    signIn: 'Mit Google anmelden',
+    signIn: 'Einloggen',
     signOut: 'Abmelden',
 
     // Footer

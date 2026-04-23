@@ -1,3 +1,4 @@
+import { Trophy, User as UserIcon, LogIn, LogOut, Shield } from 'lucide-react'
 import { useTranslation } from '../hooks/useTranslation'
 import styles from './Navigation.module.css'
 import type { User } from '../types'
@@ -20,21 +21,28 @@ export function Navigation({ user, onLoginClick, onLogoutClick, onProfileClick, 
       <button className={styles.brand} onClick={onHomeClick}>GIPFELRATEN</button>
       <div className={styles.actions}>
         <button className={styles.navLink} onClick={onLeaderboardClick}>
-          {t('globalRankings')}
+          <Trophy size={18} />
+          <span className={styles.label}>{t('globalRankings')}</span>
         </button>
         {user?.is_admin && (
-          <button className={styles.navLink} onClick={onAdminClick}>Admin</button>
+          <button className={styles.navLink} onClick={onAdminClick}>
+            <Shield size={18} />
+            <span className={styles.label}>Admin</span>
+          </button>
         )}
         <button className={styles.navLink} onClick={onProfileClick}>
-          {user ? user.username : t('profileTitle')}
+          <UserIcon size={18} />
+          <span className={styles.label}>{user ? user.username : t('profileTitle')}</span>
         </button>
         {user ? (
           <button className={styles.btnSecondary} onClick={onLogoutClick}>
-            {t('signOut')}
+            <LogOut size={18} />
+            <span className={styles.label}>{t('signOut')}</span>
           </button>
         ) : (
           <button className={styles.btnPrimary} onClick={onLoginClick}>
-            {t('signIn')}
+            <LogIn size={18} />
+            <span className={styles.label}>{t('signIn')}</span>
           </button>
         )}
       </div>
