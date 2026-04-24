@@ -82,6 +82,23 @@
   border-color: var(--color-primary);
 }
 
+.regionSelect {
+  width: 100%;
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--color-outline-variant);
+  border-radius: var(--radius-md);
+  font-size: var(--text-body-sm);
+  background: var(--color-surface-container);
+  color: var(--color-on-surface);
+  margin-bottom: var(--space-2);
+  outline: none;
+  cursor: pointer;
+}
+
+.regionSelect:focus {
+  border-color: var(--color-primary);
+}
+
 .filterRow {
   display: flex;
   gap: var(--space-1);
@@ -156,6 +173,25 @@
 
 .noPics {
   color: #dc2626;
+}
+
+.loadMoreBtn {
+  width: 100%;
+  padding: var(--space-3);
+  font-size: var(--text-label-sm);
+  color: var(--color-on-surface-variant);
+  border-top: 1px solid var(--color-outline-variant);
+  transition: background var(--transition-fast);
+}
+
+.loadMoreBtn:hover:not(:disabled) {
+  background: var(--color-surface-container);
+  color: var(--color-on-surface);
+}
+
+.loadMoreBtn:disabled {
+  opacity: 0.5;
+  cursor: default;
 }
 
 /* ── Right detail panel ── */

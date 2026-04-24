@@ -11,7 +11,12 @@ export function AdminPage() {
   const [peaks, setPeaks] = useState<AdminPeak[]>([])
   const [search, setSearch] = useState('')
   const [filterPics, setFilterPics] = useState<FilterPics>('all')
+  const [regionFilter, setRegionFilter] = useState('')
+  const [regions, setRegions] = useState<string[]>([])
+  const [offset, setOffset] = useState(0)
+  const [hasMore, setHasMore] = useState(false)
   const [loadingList, setLoadingList] = useState(false)
+  const [loadingMore, setLoadingMore] = useState(false)
 
   // Detail state
   const [selectedId, setSelectedId] = useState<number | null>(null)
@@ -25,8 +30,11 @@ export function AdminPage() {
   const [creatingNew, setCreatingNew] = useState(false)
   const [newName, setNewName] = useState('')
   const [newRegion, setNewRegion] = useState('')
+  const [newRegionCustom, setNewRegionCustom] = useState(false)
   const [newElevation, setNewElevation] = useState('')
   const [newMountainRange, setNewMountainRange] = useState('')
+  const [newMountainRangeCustom, setNewMountainRangeCustom] = useState(false)
+  const [mountainRanges, setMountainRanges] = useState<string[]>([])
   const [creating, setCreating] = useState(false)
   const [createError, setCreateError] = useState('')
 
@@ -36,21 +44,44 @@ export function AdminPage() {
   const [searchingWiki, setSearchingWiki] = useState(false)
   const [addingPic, setAddingPic] = useState<string | null>(null)
 
-  const loadPeaks = useCallback(async (q: string, filter: FilterPics) => {
+  const PAGE = 50
+
+  useEffect(() => {
+    api.admin.regions().then(setRegions).catch(() => {})
+    api.admin.mountainRanges().then(setMountainRanges).catch(() => {})
+  }, [])
+
+  const loadPeaks = useCallback(async (q: string, filter: FilterPics, region: string) => {
     setLoadingList(true)
+    setOffset(0)
     try {
       const hasPics = filter === 'all' ? undefined : filter === 'yes'
-      const data = await api.admin.peaks(q || undefined, hasPics)
+      const data = await api.admin.peaks(q || undefined, hasPics, region || undefined, 0)
       setPeaks(data)
+      setHasMore(data.length === PAGE)
+      setOffset(data.length)
     } finally {
       setLoadingList(false)
     }
-  }, [])
+  }, [PAGE])
+
+  const loadMore = async () => {
+    setLoadingMore(true)
+    try {
+      const hasPics = filterPics === 'all' ? undefined : filterPics === 'yes'
+      const data = await api.admin.peaks(search || undefined, hasPics, regionFilter || undefined, offset)
+      setPeaks(ps => [...ps, ...data])
+      setHasMore(data.length === PAGE)
+      setOffset(o => o + data.length)
+    } finally {
+      setLoadingMore(false)
+    }
+  }
 
   useEffect(() => {
-    const t = setTimeout(() => loadPeaks(search, filterPics), search ? 300 : 0)
+    const t = setTimeout(() => loadPeaks(search, filterPics, regionFilter), search ? 300 : 0)
     return () => clearTimeout(t)
-  }, [search, filterPics, loadPeaks])
+  }, [search, filterPics, regionFilter, loadPeaks])
 
   const loadDetail = useCallback(async (id: number) => {
     setLoadingDetail(true)
@@ -80,8 +111,10 @@ export function AdminPage() {
     setDetail(null)
     setNewName('')
     setNewRegion('')
+    setNewRegionCustom(false)
     setNewElevation('')
     setNewMountainRange('')
+    setNewMountainRangeCustom(false)
     setCreateError('')
     setCreatingNew(true)
   }
@@ -99,6 +132,7 @@ export function AdminPage() {
         mountain_range: newMountainRange.trim() || undefined,
       })
       setPeaks(ps => [{ id: created.id, name: created.name, region: created.region, elevation: created.elevation, picture_count: 0 }, ...ps])
+      api.admin.regions().then(setRegions).catch(() => {})
       setCreatingNew(false)
       setSelectedId(created.id)
     } catch (e: unknown) {
@@ -198,6 +232,14 @@ export function AdminPage() {
               onChange={e => setSearch(e.target.value)}
             />
           </div>
+          <select
+            className={styles.regionSelect}
+            value={regionFilter}
+            onChange={e => setRegionFilter(e.target.value)}
+          >
+            <option value="">All regions</option>
+            {regions.map(r => <option key={r} value={r}>{r}</option>)}
+          </select>
           <div className={styles.filterRow}>
             {(['all', 'yes', 'no'] as FilterPics[]).map(f => (
               <button
@@ -232,6 +274,15 @@ export function AdminPage() {
               </div>
             </button>
           ))}
+          {hasMore && (
+            <button
+              className={styles.loadMoreBtn}
+              onClick={loadMore}
+              disabled={loadingMore}
+            >
+              {loadingMore ? 'Loading…' : 'Load more'}
+            </button>
+          )}
         </div>
       </aside>
 
@@ -254,13 +305,33 @@ export function AdminPage() {
               </label>
               <label className={styles.formLabel}>
                 Region
-                <input
+                <select
                   className={styles.formInput}
-                  placeholder="e.g. Valais"
-                  value={newRegion}
-                  onChange={e => setNewRegion(e.target.value)}
-                  onKeyDown={e => e.key === 'Enter' && createPeak()}
-                />
+                  value={newRegionCustom ? '__other__' : newRegion}
+                  onChange={e => {
+                    if (e.target.value === '__other__') {
+                      setNewRegionCustom(true)
+                      setNewRegion('')
+                    } else {
+                      setNewRegionCustom(false)
+                      setNewRegion(e.target.value)
+                    }
+                  }}
+                >
+                  <option value="">—</option>
+                  {regions.map(r => <option key={r} value={r}>{r}</option>)}
+                  <option value="__other__">Other…</option>
+                </select>
+                {newRegionCustom && (
+                  <input
+                    className={styles.formInput}
+                    placeholder="New region name"
+                    value={newRegion}
+                    onChange={e => setNewRegion(e.target.value)}
+                    onKeyDown={e => e.key === 'Enter' && createPeak()}
+                    autoFocus
+                  />
+                )}
               </label>
               <label className={styles.formLabel}>
                 Elevation (m)
@@ -275,13 +346,33 @@ export function AdminPage() {
               </label>
               <label className={styles.formLabel}>
                 Mountain range
-                <input
+                <select
                   className={styles.formInput}
-                  placeholder="e.g. Pennine Alps"
-                  value={newMountainRange}
-                  onChange={e => setNewMountainRange(e.target.value)}
-                  onKeyDown={e => e.key === 'Enter' && createPeak()}
-                />
+                  value={newMountainRangeCustom ? '__other__' : newMountainRange}
+                  onChange={e => {
+                    if (e.target.value === '__other__') {
+                      setNewMountainRangeCustom(true)
+                      setNewMountainRange('')
+                    } else {
+                      setNewMountainRangeCustom(false)
+                      setNewMountainRange(e.target.value)
+                    }
+                  }}
+                >
+                  <option value="">—</option>
+                  {mountainRanges.map(r => <option key={r} value={r}>{r}</option>)}
+                  <option value="__other__">Other…</option>
+                </select>
+                {newMountainRangeCustom && (
+                  <input
+                    className={styles.formInput}
+                    placeholder="New mountain range"
+                    value={newMountainRange}
+                    onChange={e => setNewMountainRange(e.target.value)}
+                    onKeyDown={e => e.key === 'Enter' && createPeak()}
+                    autoFocus
+                  />
+                )}
               </label>
             </div>
             {createError && <p className={styles.formError}>{createError}</p>}

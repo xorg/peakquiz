@@ -65,9 +65,12 @@ export const api = {
   admin: {
     createPeak: (data: { name: string; region?: string; elevation?: number; mountain_range?: string; peak_type?: string }) =>
       request<AdminPeakDetail>('/admin/peaks', { method: 'POST', body: JSON.stringify(data) }),
-    peaks: (q?: string, hasPictures?: boolean, offset = 0) => {
+    regions: () => request<string[]>('/admin/regions'),
+    mountainRanges: () => request<string[]>('/admin/mountain-ranges'),
+    peaks: (q?: string, hasPictures?: boolean, region?: string, offset = 0) => {
       const params = new URLSearchParams({ limit: '50', offset: String(offset) })
       if (q) params.set('q', q)
+      if (region) params.set('region', region)
       if (hasPictures != null) params.set('has_pictures', String(hasPictures))
       return request<AdminPeak[]>(`/admin/peaks?${params}`)
     },

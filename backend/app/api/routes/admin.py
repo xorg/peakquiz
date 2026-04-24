@@ -68,6 +68,30 @@ def _peak_detail_response(peak: Peak) -> PeakDetail:
     )
 
 
+@router.get("/regions", response_model=list[str])
+def list_regions(
+    db: Session = Depends(get_db),
+    _admin: User = Depends(get_admin_user),
+):
+    rows = db.query(Peak.region).filter(Peak.region.isnot(None)).distinct().order_by(Peak.region).all()
+    return [r[0] for r in rows]
+
+
+@router.get("/mountain-ranges", response_model=list[str])
+def list_mountain_ranges(
+    db: Session = Depends(get_db),
+    _admin: User = Depends(get_admin_user),
+):
+    rows = (
+        db.query(Peak.mountain_range)
+        .filter(Peak.mountain_range.isnot(None))
+        .distinct()
+        .order_by(Peak.mountain_range)
+        .all()
+    )
+    return [r[0] for r in rows]
+
+
 @router.get("/peaks", response_model=list[PeakListItem])
 def list_peaks(
     q: str | None = Query(None),
@@ -87,7 +111,7 @@ def list_peaks(
     if q:
         query = query.filter(Peak.name.ilike(f"%{q}%"))
     if region:
-        query = query.filter(Peak.region.ilike(f"%{region}%"))
+        query = query.filter(Peak.region == region)
     if has_pictures is True:
         query = query.having(pic_count > 0)
     elif has_pictures is False:
@@ -245,7 +269,7 @@ def add_picture(
             license_url=body.license_url,
         )
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Upload failed: {e}")
+        raise HTTPException(status_code=500, detail=f"Upload failed: {e}") from e
 
     if not pic:
         raise HTTPException(status_code=500, detail="Upload failed")

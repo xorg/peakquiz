@@ -143,6 +143,15 @@ class TestListPeaks:
         assert all(p["picture_count"] > 0 for p in data)
         assert not any(p["name"] == "Eiger" for p in data)
 
+    def test_region_filter_is_exact_match(self, admin_client, db):
+        db.add(Peak(name="Val Peak", region="Valais"))
+        db.add(Peak(name="Val Sub Peak", region="Valais Sud"))
+        db.commit()
+        data = admin_client.get("/api/admin/peaks?region=Valais").json()
+        names = [p["name"] for p in data]
+        assert "Val Peak" in names
+        assert "Val Sub Peak" not in names
+
     def test_has_pictures_false_excludes_peaks_with_pictures(self, admin_client, peak, peak_no_pics):
         data = admin_client.get("/api/admin/peaks?has_pictures=false").json()
         assert all(p["picture_count"] == 0 for p in data)
@@ -163,6 +172,28 @@ class TestListPeaks:
         offset_data = admin_client.get("/api/admin/peaks?limit=200&offset=2").json()
         assert len(offset_data) == len(all_data) - 2
         assert offset_data[0]["id"] == all_data[2]["id"]
+
+
+# ── List regions ─────────────────────────────────────────────────────────────
+
+
+class TestListRegions:
+    def test_returns_distinct_sorted_regions(self, admin_client, db):
+        for name, region in [("A", "Valais"), ("B", "Bern"), ("C", "Valais")]:
+            db.add(Peak(name=name, region=region))
+        db.commit()
+        data = admin_client.get("/api/admin/regions").json()
+        assert data == ["Bern", "Valais"]
+
+    def test_excludes_null_regions(self, admin_client, db):
+        db.add(Peak(name="No Region"))
+        db.commit()
+        data = admin_client.get("/api/admin/regions").json()
+        assert None not in data
+        assert "" not in data
+
+    def test_requires_admin(self, regular_client):
+        assert regular_client.get("/api/admin/regions").status_code == 403
 
 
 # ── Create peak ───────────────────────────────────────────────────────────────
