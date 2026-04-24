@@ -34,6 +34,7 @@ export const translations = {
 
     // Rankings tabs
     rankingsTabAll: 'All peaks',
+    rankingsTabBestOf: 'Best of',
 
     // Quiz — active
     quizQuestion: 'WHICH PEAK IS THIS?',
@@ -105,6 +106,7 @@ export const translations = {
 
     // Rankings tabs
     rankingsTabAll: 'Alle Gipfel',
+    rankingsTabBestOf: 'Best of',
 
     // Quiz — active
     quizQuestion: 'WELCHER GIPFEL IST DAS?',

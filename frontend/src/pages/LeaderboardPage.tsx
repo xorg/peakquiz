@@ -7,6 +7,7 @@ import type { RankingEntry, AnswerRecord } from '../types'
 import styles from './LeaderboardPage.module.css'
 
 const CATEGORY_ALL = 'all'
+const BEST_OF = 'best_of'
 
 interface Props {
   finalScore?: number
@@ -28,16 +29,24 @@ export function LeaderboardPage({ finalScore, onPlayAgain, onPlay, answerHistory
   useEffect(() => {
     api.quiz.categories()
       .then(cats => {
-        setTabs(cats.map(c => ({ id: c.id, label: c.name })))
+        setTabs([
+          { id: BEST_OF, label: t('rankingsTabBestOf') },
+          ...cats.map(c => ({ id: c.id, label: c.name })),
+        ])
       })
       .catch(() => {
-        setTabs([{ id: CATEGORY_ALL, label: t('categoryAllPeaks') }])
+        setTabs([
+          { id: BEST_OF, label: t('rankingsTabBestOf') },
+          { id: CATEGORY_ALL, label: t('categoryAllPeaks') },
+        ])
       })
   }, [])
 
   useEffect(() => {
     setLoading(true)
-    const fetch = api.rankings.byCategory(selectedTab)
+    const fetch = selectedTab === BEST_OF
+      ? api.rankings.global()
+      : api.rankings.byCategory(selectedTab)
     fetch
       .then(setEntries)
       .catch(() => setEntries([]))
@@ -106,7 +115,7 @@ export function LeaderboardPage({ finalScore, onPlayAgain, onPlay, answerHistory
                 className={`${styles.tab} ${selectedTab === tab.id ? styles.tabActive : ''}`}
                 onClick={() => setSelectedTab(tab.id)}
               >
-                {tab.id === CATEGORY_ALL ? t('rankingsTabAll') : tab.label}
+                {tab.label}
               </button>
             ))}
           </div>

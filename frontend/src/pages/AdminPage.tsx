@@ -23,6 +23,7 @@ export function AdminPage() {
   const [detail, setDetail] = useState<AdminPeakDetail | null>(null)
   const [editName, setEditName] = useState('')
   const [editRegion, setEditRegion] = useState('')
+  const [editRegionCustom, setEditRegionCustom] = useState(false)
   const [loadingDetail, setLoadingDetail] = useState(false)
   const [saving, setSaving] = useState(false)
 
@@ -92,6 +93,7 @@ export function AdminPage() {
       setDetail(data)
       setEditName(data.name)
       setEditRegion(data.region ?? '')
+      setEditRegionCustom(false)
     } finally {
       setLoadingDetail(false)
     }
@@ -400,13 +402,35 @@ export function AdminPage() {
                   onChange={e => setEditName(e.target.value)}
                   onKeyDown={e => e.key === 'Enter' && savePeak()}
                 />
-                <input
-                  className={styles.regionInput}
-                  placeholder="Region"
-                  value={editRegion}
-                  onChange={e => setEditRegion(e.target.value)}
-                  onKeyDown={e => e.key === 'Enter' && savePeak()}
-                />
+                <div className={styles.regionInputWrap}>
+                  <select
+                    className={styles.regionInput}
+                    value={editRegionCustom ? '__other__' : editRegion}
+                    onChange={e => {
+                      if (e.target.value === '__other__') {
+                        setEditRegionCustom(true)
+                        setEditRegion('')
+                      } else {
+                        setEditRegionCustom(false)
+                        setEditRegion(e.target.value)
+                      }
+                    }}
+                  >
+                    <option value="">—</option>
+                    {regions.map(r => <option key={r} value={r}>{r}</option>)}
+                    <option value="__other__">Other…</option>
+                  </select>
+                  {editRegionCustom && (
+                    <input
+                      className={styles.regionInput}
+                      placeholder="New region name"
+                      value={editRegion}
+                      onChange={e => setEditRegion(e.target.value)}
+                      onKeyDown={e => e.key === 'Enter' && savePeak()}
+                      autoFocus
+                    />
+                  )}
+                </div>
                 <button
                   className={styles.saveBtn}
                   onClick={savePeak}
