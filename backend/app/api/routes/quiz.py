@@ -206,10 +206,12 @@ def next_question(session_id: str, db: Session = Depends(get_db)):
     min_elevation = session.get("min_elevation")
     peaks = _eligible_peaks(db, region, min_elevation)
     seen_pic_ids: set[int] = session["seen_pic_ids"]
+    answered_ids: set[int] = session["answered_question_ids"]
 
     available = [
         p for p in peaks
-        if any(pic.id not in seen_pic_ids for pic in p.pictures if pic.cdn_url)
+        if p.id not in answered_ids
+        and any(pic.id not in seen_pic_ids for pic in p.pictures if pic.cdn_url)
     ]
     if not available:
         raise HTTPException(status_code=404, detail="No more peaks available")

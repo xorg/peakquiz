@@ -88,19 +88,26 @@ export function useQuiz() {
 
   const advance = useCallback(async () => {
     const nextIndex = currentIndexRef.current + 1
-    setAnswerState('unanswered')
-    setWrongOption(null)
-    setCorrectOption(null)
-    setLastPoints(0)
-    setHintsRevealed(new Set())
 
     if (nextIndex < questionsRef.current.length) {
+      setAnswerState('unanswered')
+      setWrongOption(null)
+      setCorrectOption(null)
+      setLastPoints(0)
+      setHintsRevealed(new Set())
       setCurrentIndex(nextIndex)
       return
     }
 
+    // Fetch before resetting UI so the old question stays frozen (unclickable)
+    // while in-flight, preventing duplicate submissions that cause 409s.
     try {
       const nextQ = await api.quiz.next(sessionIdRef.current!)
+      setAnswerState('unanswered')
+      setWrongOption(null)
+      setCorrectOption(null)
+      setLastPoints(0)
+      setHintsRevealed(new Set())
       setQuestions(prev => [...prev, nextQ])
       setCurrentIndex(nextIndex)
     } catch {

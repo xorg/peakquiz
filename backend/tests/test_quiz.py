@@ -84,6 +84,35 @@ class TestAnswer:
         # streak kicks in at 3rd correct: 100 + 100 + 200 + 300 = 700
         assert resp.json()["totalPoints"] == 700
 
+    def test_duplicate_answer_does_not_corrupt_session(self, client, peaks):
+        """A 409 on a duplicate submission must leave the session intact for future questions."""
+        session = start(client, peaks)
+        sid = session["sessionId"]
+        q0 = session["questions"][0]
+        q1 = session["questions"][1]
+
+        first = client.post("/api/quiz/answer", json={
+            "sessionId": sid,
+            "questionId": q0["id"],
+            "answer": q0["peak"]["name"],
+        }).json()
+        assert first["totalPoints"] == 100
+
+        dup = client.post("/api/quiz/answer", json={
+            "sessionId": sid,
+            "questionId": q0["id"],
+            "answer": q0["peak"]["name"],
+        })
+        assert dup.status_code == 409
+
+        second = client.post("/api/quiz/answer", json={
+            "sessionId": sid,
+            "questionId": q1["id"],
+            "answer": q1["peak"]["name"],
+        }).json()
+        assert second["correct"] is True
+        assert second["totalPoints"] == 200
+
     def test_duplicate_answer_rejected(self, client, peaks):
         """Answering the same question twice must not award points twice."""
         session = start(client, peaks)
@@ -145,6 +174,47 @@ class TestNextQuestion:
     def test_unknown_session_returns_404(self, client):
         resp = client.get("/api/quiz/next/nonexistent")
         assert resp.status_code == 404
+
+    def test_next_question_never_returns_already_answered_peak(self, client, db):
+        """next_question must not return a peak the user already answered.
+
+        Setup: 4 peaks where peak-0 has two CDN pictures. The initial batch
+        uses all 4 peaks (picture-A of peak-0). After answering all 4, only
+        picture-B of peak-0 is unseen — without the fix next_question returns
+        peak-0 again, and answering it causes a 409.
+        """
+        from app.db.models import Peak, Picture
+
+        peak0 = Peak(name="Multi Pic Peak", elevation=4000)
+        db.add(peak0)
+        db.flush()
+        db.add(Picture(peak_id=peak0.id, cdn_url="https://cdn.example.com/p0a",
+                       original_url="http://example.com/p0a.jpg"))
+        db.add(Picture(peak_id=peak0.id, cdn_url="https://cdn.example.com/p0b",
+                       original_url="http://example.com/p0b.jpg"))
+        for i in range(1, 4):
+            p = Peak(name=f"Single Pic Peak {i}", elevation=3000 + i * 100)
+            db.add(p)
+            db.flush()
+            db.add(Picture(peak_id=p.id, cdn_url=f"https://cdn.example.com/p{i}",
+                           original_url=f"http://example.com/p{i}.jpg"))
+        db.commit()
+
+        session = start(client, db)
+        sid = session["sessionId"]
+
+        for q in session["questions"]:
+            client.post("/api/quiz/answer", json={
+                "sessionId": sid,
+                "questionId": q["id"],
+                "answer": q["peak"]["name"],
+            })
+
+        # Only peak-0's second picture is unseen — next must not return it
+        resp = client.get(f"/api/quiz/next/{sid}")
+        if resp.status_code == 200:
+            assert resp.json()["id"] != peak0.id, \
+                "next_question returned an already-answered peak"
 
     def test_exhausted_peaks_returns_404(self, client, db):
         # Only 4 peaks — all go into the initial batch
