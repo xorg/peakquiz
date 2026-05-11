@@ -36,7 +36,7 @@ export const translations = {
     modeTimed: '⏱ Timed',
     modeChill: '🏔 Chill',
     modeTimedDesc: '60 seconds — answer as many peaks as possible.',
-    modeChillDesc: '3 wrong answers allowed — use hints to reduce penalties.',
+    modeChillDesc: 'No time Pressure, 3 wrong answers allowed.',
 
     // Hints
     hintElevation: 'Elevation',
@@ -120,7 +120,7 @@ export const translations = {
     modeTimed: '⏱ Mit Timer',
     modeChill: '🏔 Entspannt',
     modeTimedDesc: '60 Sekunden — so viele Gipfel wie möglich benennen.',
-    modeChillDesc: '3 Fehler erlaubt — Hinweise nutzen, um Abzüge zu reduzieren.',
+    modeChillDesc: 'Kein Zeitdruck - nach 3 Fehlern ist Schluss.',
 
     // Hints
     hintElevation: 'Höhe',

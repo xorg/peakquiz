@@ -182,7 +182,7 @@ export function useQuiz() {
       if (modeRef.current === 'timed' && timeLeft <= BONUS_THRESHOLD_SECONDS) {
         setTimeLeft(prev => prev + BONUS_SECONDS)
       }
-      setTimeout(() => advance(), 600)
+      setTimeout(() => advance(), 300)
     } else {
       setWrongOption(answer)
       setAnswerState('wrong')
@@ -190,9 +190,9 @@ export function useQuiz() {
       setWrongCount(nextWrong)
       const limit = modeRef.current === 'chill' ? MAX_WRONG_CHILL : MAX_WRONG_TIMED
       if (nextWrong >= limit) {
-        finishTimeoutRef.current = setTimeout(() => finishQuiz(), 900)
+        finishTimeoutRef.current = setTimeout(() => finishQuiz(), 450)
       } else {
-        setTimeout(() => advance(), 900)
+        setTimeout(() => advance(), 450)
       }
     }
   }
