@@ -179,6 +179,7 @@ def start_quiz(body: StartRequest = StartRequest(), db: Session = Depends(get_db
     session_id = str(uuid.uuid4())
     _sessions[session_id] = {
         "answers": {q.id: q.peak.name for q in questions},
+        "answered_question_ids": set(),
         "seen_pic_ids": seen_pic_ids,
         "score": 0,
         "correct_count": 0,
@@ -232,9 +233,14 @@ def answer(
     if not session:
         raise HTTPException(status_code=404, detail="Session not found")
 
+    if body.questionId in session["answered_question_ids"]:
+        raise HTTPException(status_code=409, detail="Question already answered")
+
     correct_name = session["answers"].get(body.questionId)
     if correct_name is None:
         raise HTTPException(status_code=400, detail="Unknown question")
+
+    session["answered_question_ids"].add(body.questionId)
 
     is_correct = body.answer.strip().lower() == correct_name.strip().lower()
     points_earned = 0

@@ -84,6 +84,22 @@ class TestAnswer:
         # streak kicks in at 3rd correct: 100 + 100 + 200 + 300 = 700
         assert resp.json()["totalPoints"] == 700
 
+    def test_duplicate_answer_rejected(self, client, peaks):
+        """Answering the same question twice must not award points twice."""
+        session = start(client, peaks)
+        q = session["questions"][0]
+        payload = {
+            "sessionId": session["sessionId"],
+            "questionId": q["id"],
+            "answer": q["peak"]["name"],
+        }
+        first = client.post("/api/quiz/answer", json=payload).json()
+        assert first["correct"] is True
+        assert first["totalPoints"] == 100
+
+        second = client.post("/api/quiz/answer", json=payload)
+        assert second.status_code == 409
+
     def test_unknown_session_returns_404(self, client, peaks):
         resp = client.post("/api/quiz/answer", json={
             "sessionId": "nonexistent",

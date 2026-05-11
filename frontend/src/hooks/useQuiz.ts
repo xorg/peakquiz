@@ -42,6 +42,7 @@ export function useQuiz() {
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const finishTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const isEndingRef = useRef(false)
+  const isSubmittingRef = useRef(false)
   const sessionIdRef = useRef<string | null>(null)
   const scoreRef = useRef(0)
   const questionsRef = useRef<QuizQuestion[]>([])
@@ -156,10 +157,16 @@ export function useQuiz() {
   }, [])
 
   const submitAnswer = async (answer: string) => {
-    if (!currentQuestion || answerState !== 'unanswered') return
+    if (!currentQuestion || answerState !== 'unanswered' || isSubmittingRef.current) return
+    isSubmittingRef.current = true
 
     const hintsUsed = [...hintsRevealed]
-    const result = await api.quiz.answer(sessionIdRef.current!, currentQuestion.id, answer, hintsUsed)
+    let result: Awaited<ReturnType<typeof api.quiz.answer>>
+    try {
+      result = await api.quiz.answer(sessionIdRef.current!, currentQuestion.id, answer, hintsUsed)
+    } finally {
+      isSubmittingRef.current = false
+    }
 
     setAnswerHistory(prev => [...prev, { peak: currentQuestion.peak, wasCorrect: result.correct }])
     setStreak(result.streak)
