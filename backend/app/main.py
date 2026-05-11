@@ -20,6 +20,7 @@ Base.metadata.create_all(bind=engine)
 # Lightweight migrations for additive schema changes
 _MIGRATIONS = [
     "ALTER TABLE games ADD COLUMN category TEXT",
+    "ALTER TABLE games ADD COLUMN mode TEXT NOT NULL DEFAULT 'timed'",
     "ALTER TABLE pictures ADD COLUMN author_id INTEGER REFERENCES authors(id)",
     "ALTER TABLE pictures ADD COLUMN license_id INTEGER REFERENCES licenses(id)",
     "ALTER TABLE users ADD COLUMN email TEXT",
