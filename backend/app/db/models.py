@@ -31,6 +31,7 @@ class Game(Base):
     correct_count: Mapped[int] = mapped_column(Integer, default=0)
     wrong_count: Mapped[int] = mapped_column(Integer, default=0)
     category: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    mode: Mapped[str | None] = mapped_column(String(20), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
 
     user: Mapped["User"] = relationship("User", back_populates="games")

@@ -1,3 +1,5 @@
+from typing import Literal
+
 from pydantic import BaseModel
 
 
@@ -22,6 +24,7 @@ class CategoryResponse(BaseModel):
 
 class StartRequest(BaseModel):
     category: str | None = None
+    mode: Literal["timed", "chill"] = "timed"
 
 
 class QuizQuestion(BaseModel):
@@ -34,12 +37,14 @@ class QuizSession(BaseModel):
     sessionId: str
     questions: list[QuizQuestion]
     durationSeconds: int = 60
+    mode: str = "timed"
 
 
 class AnswerRequest(BaseModel):
     sessionId: str
     questionId: int
     answer: str
+    hints_used: list[str] = []
     guestId: str | None = None
 
 

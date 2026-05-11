@@ -15,14 +15,16 @@ type Route = 'home' | 'categories' | 'quiz' | 'leaderboard' | 'profile' | 'admin
 export default function App() {
   const [route, setRoute] = useState<Route>('home')
   const [quizCategory, setQuizCategory] = useState<string | undefined>(undefined)
+  const [quizMode, setQuizMode] = useState<'timed' | 'chill'>('timed')
   const { user, loading, logout } = useAuth()
 
   const handleLoginClick = () => {
     window.location.href = api.auth.googleLoginUrl()
   }
 
-  const handleCategoryStart = (category: string) => {
+  const handleCategoryStart = (category: string, mode: 'timed' | 'chill') => {
     setQuizCategory(category)
+    setQuizMode(mode)
     setRoute('quiz')
   }
 
@@ -44,6 +46,7 @@ export default function App() {
       {route === 'quiz' && (
         <QuizPage
           category={quizCategory}
+          mode={quizMode}
           onPlayAgain={() => setRoute('categories')}
         />
       )}

@@ -3,6 +3,8 @@ import { api } from '../services/api'
 import type { QuizQuestion, AnswerState, QuizState, AnswerRecord } from '../types'
 
 const QUIZ_DURATION_SECONDS = 60
+const MAX_WRONG_TIMED = 5
+const MAX_WRONG_CHILL = 3
 
 function getOrCreateGuestId(): string {
   const key = 'pq_guest_id'
@@ -13,9 +15,11 @@ function getOrCreateGuestId(): string {
   }
   return id
 }
+
 const BONUS_THRESHOLD_SECONDS = 10
 const BONUS_SECONDS = 5
-const MAX_WRONG_ANSWERS = 5
+
+export type QuizMode = 'timed' | 'chill'
 
 export function useQuiz() {
   const [quizState, setQuizState] = useState<QuizState>('idle')
@@ -31,8 +35,10 @@ export function useQuiz() {
   const [answerHistory, setAnswerHistory] = useState<AnswerRecord[]>([])
   const [streak, setStreak] = useState(0)
   const [multiplier, setMultiplier] = useState(1)
+  const [mode, setMode] = useState<QuizMode>('timed')
+  // Set of hint type strings revealed for the current question (e.g. 'elevation', 'region')
+  const [hintsRevealed, setHintsRevealed] = useState<Set<string>>(new Set())
 
-  // Refs so timer and async callbacks always see current values
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const finishTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const isEndingRef = useRef(false)
@@ -40,12 +46,15 @@ export function useQuiz() {
   const scoreRef = useRef(0)
   const questionsRef = useRef<QuizQuestion[]>([])
   const currentIndexRef = useRef(0)
+  const modeRef = useRef<QuizMode>('timed')
 
   scoreRef.current = score
   questionsRef.current = questions
   currentIndexRef.current = currentIndex
+  modeRef.current = mode
 
   const currentQuestion = questions[currentIndex] ?? null
+  const maxWrong = mode === 'chill' ? MAX_WRONG_CHILL : MAX_WRONG_TIMED
 
   const stopTimer = useCallback(() => {
     if (timerRef.current) {
@@ -82,24 +91,23 @@ export function useQuiz() {
     setWrongOption(null)
     setCorrectOption(null)
     setLastPoints(0)
+    setHintsRevealed(new Set())
 
     if (nextIndex < questionsRef.current.length) {
       setCurrentIndex(nextIndex)
       return
     }
 
-    // Fetch the next unseen question from the backend
     try {
       const nextQ = await api.quiz.next(sessionIdRef.current!)
       setQuestions(prev => [...prev, nextQ])
       setCurrentIndex(nextIndex)
     } catch {
-      // All peaks exhausted or session gone — end the quiz
       finishQuiz()
     }
   }, [finishQuiz])
 
-  const startQuiz = async (category?: string) => {
+  const startQuiz = async (category?: string, quizMode: QuizMode = 'timed') => {
     stopTimer()
     isEndingRef.current = false
     setScore(0)
@@ -114,29 +122,44 @@ export function useQuiz() {
     setAnswerHistory([])
     setStreak(0)
     setMultiplier(1)
+    setMode(quizMode)
+    modeRef.current = quizMode
+    setHintsRevealed(new Set())
     setTimeLeft(QUIZ_DURATION_SECONDS)
 
-    const newSession = await api.quiz.start(category)
+    const newSession = await api.quiz.start(category, quizMode)
     sessionIdRef.current = newSession.sessionId
     setQuestions(newSession.questions)
     questionsRef.current = newSession.questions
     setQuizState('active')
 
-    timerRef.current = setInterval(() => {
-      setTimeLeft(prev => {
-        if (prev <= 1) {
-          finishQuiz()
-          return 0
-        }
-        return prev - 1
-      })
-    }, 1000)
+    if (quizMode === 'timed') {
+      timerRef.current = setInterval(() => {
+        setTimeLeft(prev => {
+          if (prev <= 1) {
+            finishQuiz()
+            return 0
+          }
+          return prev - 1
+        })
+      }, 1000)
+    }
   }
+
+  const revealHint = useCallback((hintType: string) => {
+    setHintsRevealed(prev => {
+      if (prev.has(hintType)) return prev
+      const next = new Set(prev)
+      next.add(hintType)
+      return next
+    })
+  }, [])
 
   const submitAnswer = async (answer: string) => {
     if (!currentQuestion || answerState !== 'unanswered') return
 
-    const result = await api.quiz.answer(sessionIdRef.current!, currentQuestion.id, answer)
+    const hintsUsed = [...hintsRevealed]
+    const result = await api.quiz.answer(sessionIdRef.current!, currentQuestion.id, answer, hintsUsed)
 
     setAnswerHistory(prev => [...prev, { peak: currentQuestion.peak, wasCorrect: result.correct }])
     setStreak(result.streak)
@@ -149,7 +172,7 @@ export function useQuiz() {
       setCorrectOption(answer)
       setLastPoints(result.pointsEarned)
       setAnswerState('correct')
-      if (timeLeft <= BONUS_THRESHOLD_SECONDS) {
+      if (modeRef.current === 'timed' && timeLeft <= BONUS_THRESHOLD_SECONDS) {
         setTimeLeft(prev => prev + BONUS_SECONDS)
       }
       setTimeout(() => advance(), 600)
@@ -158,7 +181,8 @@ export function useQuiz() {
       setAnswerState('wrong')
       const nextWrong = wrongCount + 1
       setWrongCount(nextWrong)
-      if (nextWrong >= MAX_WRONG_ANSWERS) {
+      const limit = modeRef.current === 'chill' ? MAX_WRONG_CHILL : MAX_WRONG_TIMED
+      if (nextWrong >= limit) {
         finishTimeoutRef.current = setTimeout(() => finishQuiz(), 900)
       } else {
         setTimeout(() => advance(), 900)
@@ -168,9 +192,7 @@ export function useQuiz() {
 
   useEffect(() => {
     questions.forEach(q => {
-      if (q.peak.imageUrl) {
-        new Image().src = q.peak.imageUrl
-      }
+      if (q.peak.imageUrl) new Image().src = q.peak.imageUrl
     })
   }, [questions])
 
@@ -183,16 +205,19 @@ export function useQuiz() {
     timeLeft,
     answerState,
     wrongOption,
+    correctOption,
+    lastPoints,
     startQuiz,
     submitAnswer,
     submitNickname,
     answeredCount: currentIndex,
-    correctOption,
-    lastPoints,
     wrongCount,
-    maxWrong: MAX_WRONG_ANSWERS,
+    maxWrong,
     answerHistory,
     streak,
     multiplier,
+    mode,
+    hintsRevealed,
+    revealHint,
   }
 }

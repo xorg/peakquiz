@@ -24,6 +24,23 @@ def get_rankings(limit: int = Query(default=50, le=100), db: Session = Depends(g
     ]
 
 
+@router.get("/chill", response_model=list[RankingEntry])
+def get_chill_rankings(limit: int = Query(default=50, le=100), db: Session = Depends(get_db)):
+    rows = (
+        db.query(User.username, func.max(Game.score).label("best"))
+        .join(Game, Game.user_id == User.id)
+        .filter(Game.mode == "chill")
+        .group_by(User.id)
+        .order_by(func.max(Game.score).desc())
+        .limit(limit)
+        .all()
+    )
+    return [
+        RankingEntry(rank=i + 1, username=row.username, score=row.best)
+        for i, row in enumerate(rows)
+    ]
+
+
 @router.get("/category/{category}", response_model=list[RankingEntry])
 def get_category_rankings(
     category: str,
@@ -37,10 +54,11 @@ def get_category_rankings(
         if category == CATEGORY_ALL
         else Game.category == category
     )
+    timed_filter = (Game.mode == "timed") | Game.mode.is_(None)
     rows = (
         db.query(User.username, func.max(Game.score).label("best"))
         .join(Game, Game.user_id == User.id)
-        .filter(cat_filter)
+        .filter(cat_filter, timed_filter)
         .group_by(User.id)
         .order_by(func.max(Game.score).desc())
         .limit(limit)

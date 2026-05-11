@@ -7,14 +7,17 @@ import styles from './CategoryPage.module.css'
 
 const CATEGORY_ALL = 'all'
 
+type Mode = 'timed' | 'chill'
+
 interface Props {
-  onStart: (category: string) => void
+  onStart: (category: string, mode: Mode) => void
 }
 
 export function CategoryPage({ onStart }: Props) {
   const { t } = useTranslation()
   const [categories, setCategories] = useState<Category[]>([])
   const [selected, setSelected] = useState<string>(CATEGORY_ALL)
+  const [mode, setMode] = useState<Mode>('timed')
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -80,10 +83,26 @@ export function CategoryPage({ onStart }: Props) {
         </div>
       )}
 
+      <div className={styles.modeToggle}>
+        {([
+          { id: 'timed' as Mode, label: t('modeTimed'), desc: t('modeTimedDesc') },
+          { id: 'chill' as Mode, label: t('modeChill'), desc: t('modeChillDesc') },
+        ]).map(m => (
+          <button
+            key={m.id}
+            className={`${styles.modeBtn} ${mode === m.id ? styles.modeBtnActive : ''}`}
+            onClick={() => setMode(m.id)}
+          >
+            <span className={styles.modeBtnLabel}>{m.label}</span>
+            <span className={styles.modeBtnDesc}>{m.desc}</span>
+          </button>
+        ))}
+      </div>
+
       <div className={styles.footer}>
         <button
           className={styles.startBtn}
-          onClick={() => onStart(selected)}
+          onClick={() => onStart(selected, mode)}
           disabled={loading}
         >
           {t('categoryStartBtn')}

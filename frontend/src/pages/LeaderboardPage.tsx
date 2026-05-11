@@ -8,6 +8,7 @@ import styles from './LeaderboardPage.module.css'
 
 const CATEGORY_ALL = 'all'
 const BEST_OF = 'best_of'
+const CHILL = 'chill'
 
 interface Props {
   finalScore?: number
@@ -15,13 +16,15 @@ interface Props {
   onPlay?: () => void
   answerHistory?: AnswerRecord[]
   activeCategory?: string
+  activeMode?: string
 }
 
-export function LeaderboardPage({ finalScore, onPlayAgain, onPlay, answerHistory, activeCategory }: Props) {
+export function LeaderboardPage({ finalScore, onPlayAgain, onPlay, answerHistory, activeCategory, activeMode }: Props) {
   const [breakdownOpen, setBreakdownOpen] = useState(false)
   const [entries, setEntries] = useState<RankingEntry[]>([])
   const [loading, setLoading] = useState(true)
-  const [selectedTab, setSelectedTab] = useState<string>(activeCategory ?? CATEGORY_ALL)
+  const initialTab = activeMode === 'chill' ? CHILL : (activeCategory ?? CATEGORY_ALL)
+  const [selectedTab, setSelectedTab] = useState<string>(initialTab)
   const [tabs, setTabs] = useState<{ id: string; label: string }[]>([])
   const { t } = useTranslation()
 
@@ -32,12 +35,14 @@ export function LeaderboardPage({ finalScore, onPlayAgain, onPlay, answerHistory
         setTabs([
           { id: BEST_OF, label: t('rankingsTabBestOf') },
           ...cats.map(c => ({ id: c.id, label: c.name })),
+          { id: CHILL, label: t('rankingsTabChill') },
         ])
       })
       .catch(() => {
         setTabs([
           { id: BEST_OF, label: t('rankingsTabBestOf') },
           { id: CATEGORY_ALL, label: t('categoryAllPeaks') },
+          { id: CHILL, label: t('rankingsTabChill') },
         ])
       })
   }, [])
@@ -46,7 +51,9 @@ export function LeaderboardPage({ finalScore, onPlayAgain, onPlay, answerHistory
     setLoading(true)
     const fetch = selectedTab === BEST_OF
       ? api.rankings.global()
-      : api.rankings.byCategory(selectedTab)
+      : selectedTab === CHILL
+        ? api.rankings.chill()
+        : api.rankings.byCategory(selectedTab)
     fetch
       .then(setEntries)
       .catch(() => setEntries([]))

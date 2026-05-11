@@ -32,9 +32,21 @@ export const translations = {
     quizIdleDesc: "You'll have 60 seconds to identify as many mountain peaks as possible.",
     quizStart: 'Begin Ascent',
 
+    // Mode toggle
+    modeTimed: '⏱ Timed',
+    modeChill: '🏔 Chill',
+    modeTimedDesc: '60 seconds — answer as many peaks as possible.',
+    modeChillDesc: '3 wrong answers allowed — use hints to reduce penalties.',
+
+    // Hints
+    hintElevation: 'Elevation',
+    hintRegion: 'Region',
+    hintCost: '−{n} pts',
+
     // Rankings tabs
     rankingsTabAll: 'All peaks',
     rankingsTabBestOf: 'Best of',
+    rankingsTabChill: 'Chill',
 
     // Quiz — active
     quizQuestion: 'WHICH PEAK IS THIS?',
@@ -104,9 +116,21 @@ export const translations = {
     quizIdleDesc: 'Du hast 60 Sekunden, um so viele Berggipfel wie möglich zu identifizieren.',
     quizStart: 'Aufstieg beginnen',
 
+    // Mode toggle
+    modeTimed: '⏱ Mit Timer',
+    modeChill: '🏔 Entspannt',
+    modeTimedDesc: '60 Sekunden — so viele Gipfel wie möglich benennen.',
+    modeChillDesc: '3 Fehler erlaubt — Hinweise nutzen, um Abzüge zu reduzieren.',
+
+    // Hints
+    hintElevation: 'Höhe',
+    hintRegion: 'Region',
+    hintCost: '−{n} Pkt',
+
     // Rankings tabs
     rankingsTabAll: 'Alle Gipfel',
     rankingsTabBestOf: 'Best of',
+    rankingsTabChill: 'Entspannt',
 
     // Quiz — active
     quizQuestion: 'WELCHER GIPFEL IST DAS?',

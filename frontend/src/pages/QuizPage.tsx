@@ -6,17 +6,27 @@ import { Flame } from 'lucide-react'
 import { Timer } from '../components/Timer'
 import { AnswerOption } from '../components/AnswerOption'
 import { LeaderboardPage } from './LeaderboardPage'
+import type { QuizMode } from '../hooks/useQuiz'
 import styles from './QuizPage.module.css'
 
 const LABELS = ['A', 'B', 'C', 'D']
 const QUIZ_DURATION = 60
 
+// Hint types ordered for display. Extend here to add future hints.
+const HINT_TYPES: { id: string; translationKey: 'hintElevation' | 'hintRegion'; costKey: 'hintCost' }[] = [
+  { id: 'elevation', translationKey: 'hintElevation', costKey: 'hintCost' },
+  { id: 'region',    translationKey: 'hintRegion',    costKey: 'hintCost' },
+]
+
+const HINT_COSTS: Record<string, number> = { elevation: 25, region: 25 }
+
 interface Props {
   category?: string
+  mode?: QuizMode
   onPlayAgain: () => void
 }
 
-export function QuizPage({ category, onPlayAgain }: Props) {
+export function QuizPage({ category, mode = 'timed', onPlayAgain }: Props) {
   const {
     quizState,
     currentQuestion,
@@ -35,6 +45,8 @@ export function QuizPage({ category, onPlayAgain }: Props) {
     answerHistory,
     streak,
     multiplier,
+    hintsRevealed,
+    revealHint,
   } = useQuiz()
 
   const { user, refresh } = useAuth()
@@ -42,13 +54,11 @@ export function QuizPage({ category, onPlayAgain }: Props) {
   const [nickname, setNickname] = useState(() => localStorage.getItem('pq_nickname') ?? '')
 
   useEffect(() => {
-    startQuiz(category)
+    startQuiz(category, mode)
   }, [])
 
   useEffect(() => {
-    if (user && !nickname) {
-      setNickname(user.username)
-    }
+    if (user && !nickname) setNickname(user.username)
   }, [user])
 
   if (quizState === 'finished') {
@@ -58,6 +68,7 @@ export function QuizPage({ category, onPlayAgain }: Props) {
         onPlayAgain={onPlayAgain}
         answerHistory={answerHistory}
         activeCategory={category}
+        activeMode={mode}
       />
     )
   }
@@ -103,9 +114,13 @@ export function QuizPage({ category, onPlayAgain }: Props) {
   return (
     <main className={styles.page}>
       <div className={styles.hud}>
-        <div className={styles.timerWrapper}>
-          <Timer timeLeft={timeLeft} totalTime={QUIZ_DURATION} />
-        </div>
+        {mode === 'timed' ? (
+          <div className={styles.timerWrapper}>
+            <Timer timeLeft={timeLeft} totalTime={QUIZ_DURATION} />
+          </div>
+        ) : (
+          <div className={styles.chillBadge}>{t('modeChill')}</div>
+        )}
         <div className={styles.score}>
           {answerState === 'correct' && (
             <span key={answeredCount} className={styles.scoreDelta}>+{lastPoints}</span>
@@ -156,6 +171,38 @@ export function QuizPage({ category, onPlayAgain }: Props) {
             </div>
           )}
         </div>
+
+        {/* Hint bar — chill mode only */}
+        {mode === 'chill' && (
+          <div className={styles.hintBar}>
+            {HINT_TYPES.map(hint => {
+              const revealed = hintsRevealed.has(hint.id)
+              const cost = HINT_COSTS[hint.id] ?? 0
+              const label = t(hint.translationKey)
+              const value = hint.id === 'elevation'
+                ? `${currentQuestion.peak.heightM} m`
+                : currentQuestion.peak.country || '—'
+              return (
+                <div key={hint.id} className={styles.hintChip}>
+                  {revealed ? (
+                    <span className={styles.hintValue}><strong>{label}:</strong> {value}</span>
+                  ) : (
+                    <button
+                      className={styles.hintBtn}
+                      onClick={() => revealHint(hint.id)}
+                      disabled={answerState !== 'unanswered'}
+                    >
+                      {label}
+                      <span className={styles.hintCost}>
+                        {t('hintCost').replace('{n}', String(cost))}
+                      </span>
+                    </button>
+                  )}
+                </div>
+              )
+            })}
+          </div>
+        )}
 
         <div className={styles.options}>
           {currentQuestion.options.map((option, i) => (

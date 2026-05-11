@@ -20,6 +20,7 @@ export interface QuizSession {
   sessionId: string
   questions: QuizQuestion[]
   durationSeconds: number
+  mode: string
 }
 
 export interface AnswerResult {

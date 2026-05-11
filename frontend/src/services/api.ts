@@ -27,15 +27,15 @@ export const api = {
 
   quiz: {
     categories: () => request<Category[]>('/quiz/categories'),
-    start: (category?: string) =>
+    start: (category?: string, mode: 'timed' | 'chill' = 'timed') =>
       request<QuizSession>('/quiz/start', {
         method: 'POST',
-        body: JSON.stringify({ category: category ?? null }),
+        body: JSON.stringify({ category: category ?? null, mode }),
       }),
-    answer: (sessionId: string, questionId: number, answer: string) =>
+    answer: (sessionId: string, questionId: number, answer: string, hintsUsed: string[] = []) =>
       request<AnswerResult>('/quiz/answer', {
         method: 'POST',
-        body: JSON.stringify({ sessionId, questionId, answer }),
+        body: JSON.stringify({ sessionId, questionId, answer, hints_used: hintsUsed }),
       }),
     next: (sessionId: string) =>
       request<QuizQuestion>(`/quiz/next/${sessionId}`),
@@ -50,6 +50,7 @@ export const api = {
     global: (limit = 50) => request<RankingEntry[]>(`/rankings?limit=${limit}`),
     byCategory: (category: string, limit = 50) =>
       request<RankingEntry[]>(`/rankings/category/${encodeURIComponent(category)}?limit=${limit}`),
+    chill: (limit = 50) => request<RankingEntry[]>(`/rankings/chill?limit=${limit}`),
   },
 
   profile: {

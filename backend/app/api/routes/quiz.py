@@ -25,6 +25,13 @@ INITIAL_BATCH = 10
 STREAK_THRESHOLD = 3
 STREAK_MAX_MULTIPLIER = 4
 
+# Cost in points deducted per hint type used on a question.
+# Add new hint types here to extend the hint system.
+HINT_COSTS: dict[str, int] = {
+    "elevation": 25,
+    "region": 25,
+}
+
 CATEGORY_ALL = "all"
 CATEGORY_ALL_NAME = "Schweizer Berge"
 
@@ -150,6 +157,7 @@ def get_categories(db: Session = Depends(get_db)):
 
 @router.post("/start", response_model=QuizSession)
 def start_quiz(body: StartRequest = StartRequest(), db: Session = Depends(get_db)):
+    mode = body.mode
     cat = body.category or CATEGORY_ALL
     special = SPECIAL_CATEGORIES.get(cat)
     region = None if (special or cat == CATEGORY_ALL) else cat
@@ -181,9 +189,10 @@ def start_quiz(body: StartRequest = StartRequest(), db: Session = Depends(get_db
         "category": cat,
         "region": region,
         "min_elevation": min_elevation,
+        "mode": mode,
     }
 
-    return QuizSession(sessionId=session_id, questions=questions)
+    return QuizSession(sessionId=session_id, questions=questions, mode=mode)
 
 
 @router.get("/next/{session_id}", response_model=QuizQuestion)
@@ -232,7 +241,9 @@ def answer(
     if is_correct:
         session["streak"] += 1
         multiplier = _streak_multiplier(session["streak"])
-        points_earned = POINTS_PER_CORRECT * multiplier
+        hint_penalty = sum(HINT_COSTS.get(h, 0) for h in body.hints_used)
+        base = max(10, POINTS_PER_CORRECT - hint_penalty)
+        points_earned = base * multiplier
         session["score"] += points_earned
         session["correct_count"] += 1
     else:
@@ -266,11 +277,13 @@ def finish_quiz(
 ):
     session = _sessions.pop(body.sessionId, None)
     category = session.get("category", CATEGORY_ALL) if session else CATEGORY_ALL
+    game_mode = session.get("mode", "timed") if session else "timed"
+    is_chill = game_mode == "chill"
 
     if current_user:
         if body.nickname:
             current_user.username = body.nickname
-        if body.score > current_user.best_score:
+        if not is_chill and body.score > current_user.best_score:
             current_user.best_score = body.score
 
         if session:
@@ -280,6 +293,7 @@ def finish_quiz(
                 correct_count=session.get("correct_count", 0),
                 wrong_count=session.get("wrong_count", 0),
                 category=category,
+                mode=game_mode,
             )
             db.add(game)
             db.flush()
@@ -291,13 +305,14 @@ def finish_quiz(
     elif body.guestId:
         guest = db.get(User, body.guestId)
         if not guest:
-            guest = User(id=body.guestId, username=body.nickname or body.guestId, best_score=body.score)
+            initial_best = body.score if not is_chill else 0
+            guest = User(id=body.guestId, username=body.nickname or body.guestId, best_score=initial_best)
             db.add(guest)
             db.flush()
         else:
             if body.nickname:
                 guest.username = body.nickname
-            if body.score > guest.best_score:
+            if not is_chill and body.score > guest.best_score:
                 guest.best_score = body.score
 
         if session:
@@ -313,6 +328,7 @@ def finish_quiz(
                 correct_count=session.get("correct_count", 0),
                 wrong_count=session.get("wrong_count", 0),
                 category=category,
+                mode=game_mode,
             )
             db.add(game)
             db.flush()
@@ -322,5 +338,7 @@ def finish_quiz(
                 )
         db.commit()
 
+    if is_chill:
+        return {"rank": 0}
     rank = db.query(User).filter(User.best_score > body.score).count() + 1
     return {"rank": rank}
