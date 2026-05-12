@@ -167,6 +167,18 @@ export function useQuiz() {
     if (!currentQuestion || answerState !== 'unanswered' || isSubmittingRef.current) return
     isSubmittingRef.current = true
 
+    // Show correct/wrong immediately — the correct answer is already in the question data.
+    const correctName = currentQuestion.peak.name
+    const isCorrectOptimistic = answer.trim().toLowerCase() === correctName.trim().toLowerCase()
+    if (isCorrectOptimistic) {
+      setCorrectOption(answer)
+      setAnswerState('correct')
+    } else {
+      setWrongOption(answer)
+      setCorrectOption(correctName)
+      setAnswerState('wrong')
+    }
+
     const hintsUsed = [...hintsRevealed]
     let result: Awaited<ReturnType<typeof api.quiz.answer>>
     try {
@@ -183,23 +195,19 @@ export function useQuiz() {
       const newScore = result.totalPoints
       setScore(newScore)
       scoreRef.current = newScore
-      setCorrectOption(answer)
       setLastPoints(result.pointsEarned)
-      setAnswerState('correct')
       if (modeRef.current === 'timed' && timeLeft <= BONUS_THRESHOLD_SECONDS) {
         setTimeLeft(prev => prev + BONUS_SECONDS)
       }
-      setTimeout(() => advance(), 200)
+      setTimeout(() => advance(), 300)
     } else {
-      setWrongOption(answer)
-      setAnswerState('wrong')
       const nextWrong = wrongCount + 1
       setWrongCount(nextWrong)
       const limit = modeRef.current === 'chill' ? MAX_WRONG_CHILL : MAX_WRONG_TIMED
       if (nextWrong >= limit) {
-        finishTimeoutRef.current = setTimeout(() => finishQuiz(), 0)
+        finishTimeoutRef.current = setTimeout(() => finishQuiz(), 200)
       } else {
-        setTimeout(() => advance(), 300)
+        setTimeout(() => advance(), 400)
       }
     }
   }

@@ -31,11 +31,13 @@
 .option.correct {
   background: #e4f5ec;
   opacity: 1;
+  animation: pop 0.35s ease;
 }
 
 .option.correct .label {
   background: #2d6a4f;
   color: #fff;
+  animation: checkPop 0.3s ease;
 }
 
 .option.wrong {
@@ -64,6 +66,19 @@
   font-size: var(--text-body-lg);
   font-weight: 500;
   color: var(--color-on-surface);
+}
+
+@keyframes pop {
+  0%   { transform: scale(1);    box-shadow: var(--shadow-card); }
+  40%  { transform: scale(1.03); box-shadow: 0 0 0 6px #a8d5b5, 0 0 18px 4px #52b788aa; }
+  70%  { transform: scale(0.98); box-shadow: 0 0 0 3px #a8d5b5; }
+  100% { transform: scale(1);    box-shadow: var(--shadow-card); }
+}
+
+@keyframes checkPop {
+  0%   { transform: scale(0.4); opacity: 0; }
+  60%  { transform: scale(1.25); opacity: 1; }
+  100% { transform: scale(1); }
 }
 
 @keyframes shake {
