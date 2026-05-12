@@ -137,7 +137,8 @@ class TestAnswer:
         })
         assert resp.status_code == 404
 
-    def test_guess_saved_for_authenticated_user(self, auth_client, auth_user, peaks, db):
+    def test_no_db_write_at_answer_time(self, auth_client, auth_user, peaks, db):
+        """Guesses must not be written to DB during /answer — only at /finish."""
         session = start(auth_client, peaks)
         q = session["questions"][0]
         auth_client.post("/api/quiz/answer", json={
@@ -145,6 +146,18 @@ class TestAnswer:
             "questionId": q["id"],
             "answer": q["peak"]["name"],
         })
+        assert db.query(Guess).filter(Guess.user_id == auth_user.id).count() == 0
+
+    def test_guess_saved_for_authenticated_user_at_finish(self, auth_client, auth_user, peaks, db):
+        session = start(auth_client, peaks)
+        sid = session["sessionId"]
+        q = session["questions"][0]
+        auth_client.post("/api/quiz/answer", json={
+            "sessionId": sid,
+            "questionId": q["id"],
+            "answer": q["peak"]["name"],
+        })
+        auth_client.post("/api/quiz/finish", json={"sessionId": sid, "score": 100})
         guesses = db.query(Guess).filter(Guess.user_id == auth_user.id).all()
         assert len(guesses) == 1
         assert guesses[0].is_correct is True

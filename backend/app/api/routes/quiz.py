@@ -185,7 +185,6 @@ def start_quiz(body: StartRequest = StartRequest(), db: Session = Depends(get_db
         "correct_count": 0,
         "wrong_count": 0,
         "streak": 0,
-        "guess_ids": [],
         "pending_guesses": [],
         "category": cat,
         "region": region,
@@ -226,11 +225,7 @@ def next_question(session_id: str, db: Session = Depends(get_db)):
 
 
 @router.post("/answer", response_model=AnswerResult)
-def answer(
-    body: AnswerRequest,
-    db: Session = Depends(get_db),
-    current_user: User | None = Depends(get_optional_user),
-):
+def answer(body: AnswerRequest):
     session = _sessions.get(body.sessionId)
     if not session:
         raise HTTPException(status_code=404, detail="Session not found")
@@ -259,14 +254,7 @@ def answer(
         multiplier = 1
         session["wrong_count"] += 1
 
-    if current_user:
-        guess = Guess(user_id=current_user.id, peak_id=body.questionId, is_correct=is_correct)
-        db.add(guess)
-        db.flush()
-        session["guess_ids"].append(guess.id)
-        db.commit()
-    else:
-        session["pending_guesses"].append({"peak_id": body.questionId, "is_correct": is_correct})
+    session["pending_guesses"].append({"peak_id": body.questionId, "is_correct": is_correct})
 
     return AnswerResult(
         correct=is_correct,
@@ -295,6 +283,13 @@ def finish_quiz(
             current_user.best_score = body.score
 
         if session:
+            guess_ids = []
+            for pg in session.get("pending_guesses", []):
+                guess = Guess(user_id=current_user.id, peak_id=pg["peak_id"], is_correct=pg["is_correct"])
+                db.add(guess)
+                db.flush()
+                guess_ids.append(guess.id)
+
             game = Game(
                 user_id=current_user.id,
                 score=body.score,
@@ -305,8 +300,8 @@ def finish_quiz(
             )
             db.add(game)
             db.flush()
-            if session.get("guess_ids"):
-                db.query(Guess).filter(Guess.id.in_(session["guess_ids"])).update(
+            if guess_ids:
+                db.query(Guess).filter(Guess.id.in_(guess_ids)).update(
                     {"game_id": game.id}, synchronize_session=False
                 )
         db.commit()
@@ -324,11 +319,12 @@ def finish_quiz(
                 guest.best_score = body.score
 
         if session:
+            guess_ids = []
             for pg in session.get("pending_guesses", []):
                 guess = Guess(user_id=guest.id, peak_id=pg["peak_id"], is_correct=pg["is_correct"])
                 db.add(guess)
                 db.flush()
-                session.setdefault("guess_ids", []).append(guess.id)
+                guess_ids.append(guess.id)
 
             game = Game(
                 user_id=guest.id,
@@ -340,8 +336,8 @@ def finish_quiz(
             )
             db.add(game)
             db.flush()
-            if session.get("guess_ids"):
-                db.query(Guess).filter(Guess.id.in_(session["guess_ids"])).update(
+            if guess_ids:
+                db.query(Guess).filter(Guess.id.in_(guess_ids)).update(
                     {"game_id": game.id}, synchronize_session=False
                 )
         db.commit()
